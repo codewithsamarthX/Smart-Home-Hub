@@ -3,41 +3,29 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Smart Home Hub</title>
+    <title>Smart Home Hub </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
     <style>
+        :root {
+            --thumb-border-color: #3b82f6;
+        }
         input[type="range"] { 
-            -webkit-appearance: none; 
-            appearance: none; 
-            width: 100%; 
-            height: 8px; 
-            background-color: #374151;
-            border-radius: 8px;
-            outline: none; 
+            -webkit-appearance: none; appearance: none; width: 100%; height: 8px; 
+            background-color: #374151; border-radius: 8px; outline: none; 
             transition: all 0.2s ease;
         }
         input[type="range"]::-webkit-slider-thumb { 
-            -webkit-appearance: none; 
-            appearance: none; 
-            width: 20px; 
-            height: 20px; 
-            background-color: white;
-            border-radius: 50%;
-            border: 3px solid #3b82f6;
-            cursor: pointer; 
-            margin-top: -6px;
-            transition: all 0.2s ease;
+            -webkit-appearance: none; appearance: none; width: 20px; height: 20px; 
+            background-color: white; border-radius: 50%;
+            border: 3px solid var(--thumb-border-color);
+            cursor: pointer; margin-top: -6px; transition: all 0.2s ease;
         }
         input[type="range"]::-moz-range-thumb { 
-            width: 20px; 
-            height: 20px; 
-            background-color: white;
-            border-radius: 50%;
-            border: 3px solid #3b82f6;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            width: 20px; height: 20px; background-color: white; border-radius: 50%;
+            border: 3px solid var(--thumb-border-color);
+            cursor: pointer; transition: all 0.2s ease;
         }
         input[type="range"].color-slider {
             background: linear-gradient(to right, 
@@ -50,11 +38,11 @@
             transition: all 150ms;
         }
         .temp-button:active { background-color: #4B5563; transform: scale(0.95); }
-
         .scene-button { 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 1rem; border-radius: .5rem; background-color: rgba(31,41,55,0.7);
             border: 1px solid rgba(55,65,81,0.5); backdrop-filter: blur(8px); color: #D1D5DB; transition: 200ms;
+            position: relative; overflow: hidden;
         }
         .scene-button:hover { background-color: rgba(55,65,81,0.8); color:white; }
         .scene-button.active { background-color: rgba(37,99,235,0.9); color:white; border-color:#3B82F6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
@@ -64,88 +52,152 @@
         .icon-unlocked { color: #10B981; }
         .speaker-icon-on { color: #3B82F6; }
         #fan-icon { will-change: transform; }
-
+        
+        /* --- Dynamic Background --- */
+        body {
+            /* Default: Day */
+            background-image: radial-gradient(circle at 10% 20%, rgb(90, 107, 136) 0%, rgb(45, 58, 74) 90%);
+            transition: background-image 1.5s ease-in-out;
+        }
+        body.theme-morning { background-image: radial-gradient(circle at 10% 20%, rgb(240, 183, 138) 0%, rgb(236, 115, 103) 90%); }
+        body.theme-day { background-image: radial-gradient(circle at 10% 20%, rgb(90, 107, 136) 0%, rgb(45, 58, 74) 90%); }
+        body.theme-evening { background-image: radial-gradient(circle at 10% 20%, rgb(71, 39, 78) 0%, rgb(28, 25, 44) 90%); }
+        body.theme-night { background-image: radial-gradient(circle at 10% 20%, rgb(28, 30, 48) 0%, rgb(10, 10, 20) 90%); }
+        
         @keyframes glow {
-          0%,100% { filter: drop-shadow(0 0 6px #3b82f6); }
-          50% { filter: drop-shadow(0 0 12px #3b82f6); }
+            0%,100% { filter: drop-shadow(0 0 6px #3b82f6); }
+            50% { filter: drop-shadow(0 0 12px #3b82f6); }
         }
         .glow-animate { animation: glow 1.5s infinite; }
+        .device-card { transition: all 0.2s ease-in-out; }
+        .device-card:hover:not(:has(input:focus)):not(:has(button:focus)) {
+            transform: translateY(-4px) scale(1.02);
+            border-color: rgba(107, 114, 128, 0.7);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 40; transition: opacity 0.3s ease-in-out;
+        }
+        #modal-box {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            background-color: rgb(31, 41, 55);
+            border-radius: 0.75rem; padding: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            z-index: 50; width: 90%; max-width: 28rem;
+            transition: all 0.3s ease-in-out;
+        }
+        .modal-hidden { opacity: 0; pointer-events: none; }
+        #modal-box.modal-hidden { transform: translate(-50%, -50%) scale(0.9); }
+        .ripple-button { position: relative; overflow: hidden; }
+        .ripple {
+            position: absolute; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0);
+            animation: ripple-anim 0.6s linear;
+        }
+        @keyframes ripple-anim {
+            to { transform: scale(4); opacity: 0; }
+        }
     </style>
 </head>
-<body class="bg-gray-900 text-white font-sans antialiased min-h-screen flex flex-col"
-      style="background-image: radial-gradient(circle at 10% 20%, rgb(30, 41, 59) 0%, rgb(17, 24, 39) 90%);">
+<body class="bg-gray-900 text-white font-sans antialiased min-h-screen flex flex-col">
 
     <main class="flex-grow p-4 md:p-8">
+        
         <header class="mb-8 flex justify-between items-center max-w-7xl mx-auto">
             <div>
                 <h1 class="text-3xl md:text-4xl font-bold">Smart Hub</h1>
                 <p id="date-display" class="text-lg text-gray-400">Loading date...</p>
             </div>
-            <div class="text-right">
-                <div id="time-display" class="text-3xl md:text-4xl font-bold">--:--:--</div>
-                <div id="ampm-display" class="text-lg text-gray-400">&nbsp;</div>
+            
+            <div class="text-right flex items-center gap-4">
+                <div class="flex gap-3 justify-end items-center">
+                    <div id="weather-icon-container" class="w-10 h-10">
+                        <i data-lucide="cloud-sun" class="w-10 h-10 text-yellow-400"></i>
+                    </div>
+                    <div>
+                        <div id="weather-temp" class="text-2xl font-bold">75&deg;F</div>
+                        <div id="weather-desc" class="text-sm text-gray-400">Partly Cloudy</div>
+                    </div>
+                </div>
+                <div>
+                    <div id="time-display" class="text-3xl md:text-4xl font-bold">--:--:--</div>
+                    <div id="ampm-display" class="text-lg text-gray-400">&nbsp;</div>
+                </div>
             </div>
         </header>
 
         <section class="max-w-7xl mx-auto mb-8">
             <h2 class="text-2xl font-semibold mb-4">Scenes</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <button id="scene-good-morning" class="scene-button" data-scene="goodMorning">
-                    <i data-lucide="sunrise" class="mb-2 pointer-events-none"></i>
+            <div class="grid grid-cols-3 md:grid-cols-6 gap-4">
+                <button id="scene-good-morning" class="scene-button ripple-button" data-scene="goodMorning">
+                    <i data-lucide="sunrise" class="mb-2"></i>
                     <span class="pointer-events-none">Good Morning</span>
                 </button>
-                <button id="scene-movie-night" class="scene-button" data-scene="movieNight">
-                    <i data-lucide="film" class="mb-2 pointer-events-none"></i>
+                <button id="scene-movie-night" class="scene-button ripple-button" data-scene="movieNight">
+                    <i data-lucide="film" class="mb-2"></i>
                     <span class="pointer-events-none">Movie Night</span>
                 </button>
-                <button id="scene-good-night" class="scene-button" data-scene="goodNight">
-                    <i data-lucide="moon" class="mb-2 pointer-events-none"></i>
+                <button id="scene-good-night" class="scene-button ripple-button" data-scene="goodNight">
+                    <i data-lucide="moon" class="mb-2"></i>
                     <span class="pointer-events-none">Good Night</span>
                 </button>
-                <button id="scene-all-off" class="scene-button" data-scene="allOff">
-                    <i data-lucide="power-off" class="mb-2 pointer-events-none"></i>
+                <button id="scene-all-off" class="scene-button ripple-button" data-scene="allOff">
+                    <i data-lucide="power-off" class="mb-2"></i>
                     <span class="pointer-events-none">All Off</span>
+                </button>
+                <button id="scene-party-time" class="scene-button ripple-button" data-scene="partyTime">
+                    <i data-lucide="party-popper" class="mb-2"></i>
+                    <span class="pointer-events-none">Party Time</span>
+                </button>
+                <button id="scene-focus-mode" class="scene-button ripple-button" data-scene="focusMode">
+                    <i data-lucide="brain" class="mb-2"></i>
+                    <span class="pointer-events-none">Focus Mode</span>
                 </button>
             </div>
         </section>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            <!-- Light Card -->
-            <div id="light-card" class="bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6 transition-all duration-300 cursor-pointer" style="--light-hue: 200;">
+            <div id="light-card" class="device-card bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6 cursor-pointer" 
+                 style="--light-hue: 200;"
+                 role="button" tabindex="0" aria-pressed="false" aria-label="Living Room Light toggle">
                 <div class="flex justify-between items-center mb-4 pointer-events-none">
                     <div class="flex items-center space-x-3">
                         <i id="light-icon" data-lucide="lightbulb" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
                         <h2 class="text-2xl font-semibold">Living Room Light</h2>
                     </div>
                 </div>
-                <div id="light-controls" class="space-y-3 opacity-30 transition-opacity duration-300">
+                <div id="light-controls" class="space-y-3 transition-opacity duration-300">
                     <label for="light-intensity" class="block text-sm font-medium text-gray-400">Intensity</label>
-                    <input type="range" id="light-intensity" min="0" max="100" value="50" class="w-full">
+                    <input type="range" id="light-intensity" min="0" max="100" value="50" class="w-full" aria-label="Light intensity">
                     <div id="light-intensity-value" class="text-center text-lg font-medium">50%</div>
                 </div>
-                <div id="light-color-controls" class="space-y-3 mt-4 opacity-30 transition-opacity duration-300">
+                <div id="light-color-controls" class="space-y-3 mt-4 transition-opacity duration-300">
                     <label for="light-color" class="block text-sm font-medium text-gray-400">Color</label>
-                    <input type="range" id="light-color" min="0" max="360" value="200" class="w-full color-slider">
+                    <input type="range" id="light-color" min="0" max="360" value="200" class="w-full color-slider" aria-label="Light color">
                 </div>
             </div>
 
-            <!-- Fan Card -->
-            <div id="fan-card" class="bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6 transition-all duration-300 cursor-pointer">
+            <div id="fan-card" class="device-card bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6 cursor-pointer"
+                 role="button" tabindex="0" aria-pressed="false" aria-label="Bedroom Fan toggle">
                 <div class="flex justify-between items-center mb-4 pointer-events-none">
                     <div class="flex items-center space-x-3">
                         <i id="fan-icon" data-lucide="fan" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
                         <h2 class="text-2xl font-semibold">Bedroom Fan</h2>
                     </div>
                 </div>
-                <div id="fan-controls" class="space-y-3 opacity-30 transition-opacity duration-300">
+                <div id="fan-controls" class="space-y-3 transition-opacity duration-300">
                     <label for="fan-speed" class="block text-sm font-medium text-gray-400">Speed</label>
-                    <input type="range" id="fan-speed" min="0" max="5" value="2" class="w-full">
+                    <input type="range" id="fan-speed" min="0" max="5" value="2" class="w-full" aria-label="Fan speed">
                     <div id="fan-speed-value" class="text-center text-lg font-medium">Level 2</div>
                 </div>
             </div>
 
-            <!-- Thermostat Card -->
-            <div id="thermostat-card" class="bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6 transition-all duration-300">
+            <div id="thermostat-card" class="device-card bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6">
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center space-x-3">
                         <i id="thermostat-icon" data-lucide="thermometer" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
@@ -153,22 +205,21 @@
                     </div>
                 </div>
                 <div class="flex justify-between items-center mb-4">
-                    <button id="temp-down" class="temp-button">-</button>
+                    <button id="temp-down" class="temp-button ripple-button" aria-label="Temperature Down">-</button>
                     <div class="text-center">
                         <div id="temp-display" class="text-6xl font-bold">68&deg;</div>
                         <div id="temp-mode-display" class="text-lg text-gray-400">Off</div>
                     </div>
-                    <button id="temp-up" class="temp-button">+</button>
+                    <button id="temp-up" class="temp-button ripple-button" aria-label="Temperature Up">+</button>
                 </div>
                 <div id="temp-mode-container" class="flex justify-around">
-                    <button id="temp-mode-heat" class="temp-mode-button p-2 rounded-lg" data-mode="Heat"><i data-lucide="flame" class="w-6 h-6 text-gray-500 pointer-events-none"></i></button>
-                    <button id="temp-mode-cool" class="temp-mode-button p-2 rounded-lg" data-mode="Cool"><i data-lucide="snowflake" class="w-6 h-6 text-gray-500 pointer-events-none"></i></button>
-                    <button id="temp-mode-off" class="temp-mode-button p-2 rounded-lg" data-mode="Off"><i data-lucide="power" class="w-6 h-6 text-gray-500 pointer-events-none"></i></button>
+                    <button id="temp-mode-heat" class="temp-mode-button ripple-button p-2 rounded-lg" data-mode="Heat" aria-label="Set Heat Mode"><i data-lucide="flame" class="w-6 h-6 text-gray-500 pointer-events-none"></i></button>
+                    <button id="temp-mode-cool" class="temp-mode-button ripple-button p-2 rounded-lg" data-mode="Cool" aria-label="Set Cool Mode"><i data-lucide="snowflake" class="w-6 h-6 text-gray-500 pointer-events-none"></i></button>
+                    <button id="temp-mode-off" class="temp-mode-button ripple-button p-2 rounded-lg" data-mode="Off" aria-label="Set Mode Off"><i data-lucide="power" class="w-6 h-6 text-gray-500 pointer-events-none"></i></button>
                 </div>
             </div>
 
-            <!-- Lock Card -->
-            <div id="lock-card" class="bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6 transition-all duration-300">
+            <div id="lock-card" class="device-card bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6">
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center space-x-3">
                         <i id="lock-icon-locked" data-lucide="lock" class="w-7 h-7 icon-locked transition-all duration-300"></i>
@@ -176,14 +227,12 @@
                         <h2 class="text-2xl font-semibold">Front Door</h2>
                     </div>
                 </div>
-                <button id="lock-toggle-button" class="w-full h-24 rounded-lg text-2xl font-semibold transition-all duration-200">
+                <button id="lock-toggle-button" class="w-full h-24 rounded-lg text-2xl font-semibold transition-all duration-200 ripple-button">
                     Lock
                 </button>
-                <div id="lock-status" class="text-center text-lg text-gray-400 mt-3">Current Status: Unknown</div>
             </div>
 
-            <!-- Speaker Card -->
-            <div id="speaker-card" class="bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6 transition-all duration-300">
+            <div id="speaker-card" class="device-card bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6">
                 <div class="flex justify-between items-center mb-4 pointer-events-none">
                     <div class="flex items-center space-x-3">
                         <i id="speaker-icon" data-lucide="volume-2" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
@@ -192,55 +241,76 @@
                 </div>
                 <div id="speaker-controls" class="space-y-3">
                     <label for="speaker-volume" class="block text-sm font-medium text-gray-400">Volume</label>
-                    <input type="range" id="speaker-volume" min="0" max="100" value="30" class="w-full">
+                    <input type="range" id="speaker-volume" min="0" max="100" value="30" class="w-full" aria-label="Speaker volume">
                     <div id="speaker-volume-value" class="text-center text-lg font-medium">30%</div>
                 </div>
 
                 <div class="mt-4 text-center">
-                  <div id="track-title" class="text-lg text-gray-300 mb-4 h-6 truncate">Paused</div>
+                    <div id="track-title" class="text-lg text-gray-300 mb-4 h-6 truncate">Paused</div>
 
-                  <div class="flex justify-center items-center space-x-4">
-                    <!-- Previous -->
-                    <button id="prev-track" class="p-3 rounded-full bg-gray-700 hover:bg-gray-600 transition-all shadow-md hover:scale-110">
-                      <i data-lucide="skip-back" class="w-6 h-6 pointer-events-none"></i>
-                    </button>
+                    <div class="flex justify-center items-center space-x-4">
+                        <button id="prev-track" class="p-3 rounded-full bg-gray-700 hover:bg-gray-600 transition-all shadow-md hover:scale-110 ripple-button" aria-label="Previous Track">
+                            <i data-lucide="skip-back" class="w-6 h-6 pointer-events-none"></i>
+                        </button>
+                        <button id="play-pause" class="p-4 rounded-full bg-blue-600 hover:bg-blue-700 transition-all transform hover:scale-110 shadow-lg ripple-button" aria-label="Play or Pause Music">
+                            <i id="play-icon" data-lucide="play" class="w-7 h-7 pointer-events-none"></i>
+                            <i id="pause-icon" data-lucide="pause" class="w-7 h-7 pointer-events-none hidden"></i>
+                        </button>
+                        <button id="next-track" class="p-3 rounded-full bg-gray-700 hover:bg-gray-600 transition-all shadow-md hover:scale-110 ripple-button" aria-label="Next Track">
+                            <i data-lucide="skip-forward" class="w-6 h-6 pointer-events-none"></i>
+                        </button>
+                    </div>
 
-                    <!-- Play / Pause -->
-                    <button id="play-pause" class="p-4 rounded-full bg-blue-600 hover:bg-blue-700 transition-all transform hover:scale-110 shadow-lg">
-                      <i id="play-icon" data-lucide="play" class="w-7 h-7 pointer-events-none"></i>
-                      <i id="pause-icon" data-lucide="pause" class="w-7 h-7 pointer-events-none hidden"></i>
-                    </button>
-
-                    <!-- Next -->
-                    <button id="next-track" class="p-3 rounded-full bg-gray-700 hover:bg-gray-600 transition-all shadow-md hover:scale-110">
-                      <i data-lucide="skip-forward" class="w-6 h-6 pointer-events-none"></i>
-                    </button>
-                  </div>
-
-                  <!-- Now Playing Icon -->
-                  <div class="mt-4 flex justify-center items-center space-x-2">
-                    <i id="now-playing-icon" data-lucide="radio" class="w-5 h-5 text-gray-500 transition-all duration-300"></i>
-                    <span id="now-playing-text" class="text-sm text-gray-400">Idle</span>
-                  </div>
+                    <div class="mt-4 flex justify-center items-center space-x-2">
+                        <i id="now-playing-icon" data-lucide="radio" class="w-5 h-5 text-gray-500 transition-all duration-300"></i>
+                        <span id="now-playing-text" class="text-sm text-gray-400">Idle</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Add device placeholder -->
-            <div class="bg-gray-800/70 backdrop-blur-lg border border-dashed border-gray-700/50 rounded-xl shadow-2xl p-6 flex items-center justify-center">
-                <div class="text-center text-gray-600">
+            <div id="add-device-card" class="device-card bg-gray-800/70 backdrop-blur-lg border border-dashed border-gray-700/50 rounded-xl shadow-2xl p-6 flex items-center justify-center cursor-pointer"
+                 role="button" tabindex="0" aria-label="Add new device">
+                <div class="text-center text-gray-600 pointer-events-none">
                     <i data-lucide="plus-circle" class="w-12 h-12 mb-2"></i>
                     <p>Add New Device</p>
                 </div>
             </div>
 
         </div>
+
+        <div id="modal-overlay" class="modal-hidden"></div>
+        <div id="modal-box" class="modal-hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold">Add New Device</h2>
+                <button id="modal-close-button" class="p-1 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white ripple-button" aria-label="Close modal">
+                    <i data-lucide="x" class="w-6 h-6 pointer-events-none"></i>
+                </button>
+            </div>
+            <p class="text-gray-300 mb-6">Select a device type to add to your hub. (This is a demo, no new device will be added).</p>
+            <div class="grid grid-cols-2 gap-4">
+                <button class="scene-button ripple-button" aria-label="Add smart light">
+                    <i data-lucide="lightbulb" class="mb-2"></i><span>Smart Light</span>
+                </button>
+                <button class="scene-button ripple-button" aria-label="Add smart plug">
+                    <i data-lucide="plug" class="mb-2"></i><span>Smart Plug</span>
+                </button>
+                <button class="scene-button ripple-button" aria-label="Add camera">
+                    <i data-lucide="camera" class="mb-2"></i><span>Camera</span>
+                </button>
+                <button class="scene-button ripple-button" aria-label="Add door lock">
+                    <i data-lucide="lock" class="mb-2"></i><span>Door Lock</span>
+                </button>
+            </div>
+        </div>
+
     </main>
 
     <footer class="sticky bottom-0 bg-gray-900/80 backdrop-blur-md p-4 w-full border-t border-gray-700/50">
         <div class="max-w-3xl mx-auto flex flex-col items-center space-y-3">
             <div id="status-message" class="text-gray-400 text-sm h-5 transition-all">Tap mic to speak</div>
 
-            <button id="mic-button" class="bg-blue-600 hover:bg-blue-700 text-white p-5 rounded-full shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500/50">
+            <button id="mic-button" class="bg-blue-600 hover:bg-blue-700 text-white p-5 rounded-full shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500/50 ripple-button"
+                    aria-label="Activate voice control">
                 <i id="mic-icon" data-lucide="mic" class="w-7 h-7"></i>
                 <i id="mic-active-icon" data-lucide="radio" class="w-7 h-7 hidden"></i>
             </button>
@@ -248,559 +318,967 @@
         </div>
     </footer>
 
-    <!-- Hidden audio element used for local file playback -->
     <audio id="audio-element" preload="metadata"></audio>
 
-    <script>
+   <script>
+    // --- Main App Initializer ---
     document.addEventListener('DOMContentLoaded', () => {
-        // --- App state
-        const appState = {
-            light: { isOn:false, intensity:50, hue:200 },
-            fan: { isOn:false, speed:2 },
-            thermostat: { temperature:68, mode:'Off' },
-            lock: { isLocked:true },
-            speaker: { isPlaying:false, volume:30, trackIndex:0 },
+        SmartHub.init();
+    });
+
+    // --- Main SmartHub Application Object ---
+    const SmartHub = {
+
+        // --- 1. Application State ---
+        state: {
+            light: { intensity: 50, lastKnownIntensity: 50, hue: 200 },
+            fan: { speed: 2, lastKnownSpeed: 2 },
+            thermostat: { temperature: 68, mode: 'Off' },
+            lock: { isLocked: true },
+            speaker: { isPlaying: false, volume: 30, trackIndex: 0 },
             activeScene: null,
-            statusTimer: null
-        };
+            statusTimer: null,
+            listening: false,
+            currentMockWeatherIndex: 1,
+            currentTheme: null 
+        },
 
-        // small color map & word->number map are kept
-        const colorMap = { red:0, orange:30, yellow:60, green:120, cyan:180, blue:240, purple:270, magenta:300, pink:330 };
-        const wordToNumberMap = { 'zero':0,'oh':0,'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,'ten':10,'eleven':11,'twelve':12,'thirteen':13,'fourteen':14,'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,'nineteen':19,'twenty':20,'thirty':30,'forty':40,'fifty':50,'sixty':60,'seventy':70,'eighty':80,'ninety':90,'hundred':100,'a':1 };
-
-        function parseNumber(command) {
-            if (!command || typeof command !== 'string') return null;
-            const digitMatch = command.match(/(\d+)/);
-            if (digitMatch) return parseInt(digitMatch[1],10);
-            const tokens = command.toLowerCase().split(/[^a-z]+/).filter(Boolean);
-            let total = 0, current = 0, found = false;
-            for (const t of tokens) {
-                if (!(t in wordToNumberMap)) { if (current>0){ total+=current; current=0;} continue; }
-                found = true;
-                const val = wordToNumberMap[t];
-                if (val === 100) current = (current||1)*100; else current += val;
-            }
-            total += current;
-            return found ? total : null;
-        }
-
-        // --- UI cache
-        const UI = {
-            timeDisplay: document.getElementById('time-display'),
-            ampmDisplay: document.getElementById('ampm-display'),
-            dateDisplay: document.getElementById('date-display'),
-            light: {
-                card: document.getElementById('light-card'),
-                controls: document.getElementById('light-controls'),
-                intensity: document.getElementById('light-intensity'),
-                value: document.getElementById('light-intensity-value'),
-                icon: document.getElementById('light-icon'),
-                colorControls: document.getElementById('light-color-controls'),
-                colorSlider: document.getElementById('light-color')
-            },
-            fan: {
-                card: document.getElementById('fan-card'),
-                controls: document.getElementById('fan-controls'),
-                speed: document.getElementById('fan-speed'),
-                value: document.getElementById('fan-speed-value'),
-                icon: document.getElementById('fan-icon')
-            },
-            thermostat: {
-                card: document.getElementById('thermostat-card'),
-                display: document.getElementById('temp-display'),
-                modeDisplay: document.getElementById('temp-mode-display'),
-                icon: document.getElementById('thermostat-icon'),
-                tempUp: document.getElementById('temp-up'),
-                tempDown: document.getElementById('temp-down'),
-                modeContainer: document.getElementById('temp-mode-container'),
-                modeButtons: document.querySelectorAll('.temp-mode-button')
-            },
-            lock: {
-                card: document.getElementById('lock-card'),
-                iconLocked: document.getElementById('lock-icon-locked'),
-                iconUnlocked: document.getElementById('lock-icon-unlocked'),
-                button: document.getElementById('lock-toggle-button'),
-                status: document.getElementById('lock-status')
-            },
-            speaker: {
-                card: document.getElementById('speaker-card'),
-                icon: document.getElementById('speaker-icon'),
-                volume: document.getElementById('speaker-volume'),
-                value: document.getElementById('speaker-volume-value'),
-                playButton: document.getElementById('play-pause'),
-                playIcon: document.getElementById('play-icon'),
-                pauseIcon: document.getElementById('pause-icon'),
-                prevButton: document.getElementById('prev-track'),
-                nextButton: document.getElementById('next-track'),
-                trackTitle: document.getElementById('track-title'),
-                nowIcon: document.getElementById('now-playing-icon'),
-                nowText: document.getElementById('now-playing-text')
-            },
+        // --- 2. Static Configuration ---
+        config: {
+            playlist: [
+                'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+                'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
+            ],
+            colorMap: { red: 0, orange: 30, yellow: 60, green: 120, cyan: 180, blue: 240, purple: 270, magenta: 300, pink: 330 },
+            wordToNumberMap: { 'zero':0,'oh':0,'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,'ten':10,'eleven':11,'twelve':12,'thirteen':13,'fourteen':14,'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,'nineteen':19,'twenty':20,'thirty':30,'forty':40,'fifty':50,'sixty':60,'seventy':70,'eighty':80,'ninety':90,'hundred':100,'a':1 },
+            mockWeather: [
+                { desc: 'Sunny', temp: 78, icon: 'sun', color: 'text-yellow-400' },
+                { desc: 'Partly Cloudy', temp: 75, icon: 'cloud-sun', color: 'text-yellow-400' },
+                { desc: 'Cloudy', temp: 72, icon: 'cloud', color: 'text-gray-400' },
+                { desc: 'Rain', temp: 68, icon: 'cloud-rain', color: 'text-blue-400' },
+                { desc: 'Clear Night', temp: 65, icon: 'moon', color: 'text-blue-200' }
+            ],
+            
             scenes: {
-                goodMorning: document.getElementById('scene-good-morning'),
-                movieNight: document.getElementById('scene-movie-night'),
-                goodNight: document.getElementById('scene-good-night'),
-                allOff: document.getElementById('scene-all-off'),
+                'goodMorning': {
+                    message: "Activated 'Good Morning' scene.",
+                    updates: {
+                        light: { intensity: 70, lastKnownIntensity: 70, hue: 50 },
+                        fan: { speed: 0 },
+                        thermostat: { temperature: 68, mode: 'Heat' },
+                        lock: { isLocked: false }
+                    }
+                },
+                'movieNight': {
+                    message: "Activated 'Movie Night' scene.",
+                    updates: {
+                        light: { intensity: 20, lastKnownIntensity: 20, hue: 240 },
+                        fan: { speed: 1, lastKnownSpeed: 1 },
+                        lock: { isLocked: true }
+                    },
+                    audio: { volume: 40, play: true }
+                },
+                'goodNight': {
+                    message: "Activated 'Good Night' scene.",
+                    updates: {
+                        light: { intensity: 0 },
+                        fan: { speed: 0 },
+                        thermostat: { temperature: 65, mode: 'Heat' },
+                        lock: { isLocked: true }
+                    },
+                    audio: { volume: 0, pause: true }
+                },
+                'allOff': {
+                    message: "Turned all devices off.",
+                    updates: {
+                        light: { intensity: 0 },
+                        fan: { speed: 0 },
+                        thermostat: { mode: 'Off' }
+                    },
+                    audio: { volume: 0, pause: true }
+                },
+                'partyTime': {
+                    message: "Let's get this party started!",
+                    updates: {
+                        light: { intensity: 100, lastKnownIntensity: 100, hue: 300 },
+                        fan: { speed: 1, lastKnownSpeed: 1 },
+                        thermostat: { temperature: 70, mode: 'Cool' },
+                        lock: { isLocked: true }
+                    },
+                    audio: { volume: 70, play: true }
+                },
+                'focusMode': {
+                    message: "Activating 'Focus Mode'.",
+                    updates: {
+                        light: { intensity: 60, lastKnownIntensity: 60, hue: 220 },
+                        fan: { speed: 1, lastKnownSpeed: 1 },
+                        thermostat: { temperature: 68, mode: 'Heat' },
+                        lock: { isLocked: true }
+                    },
+                    audio: { volume: 0, pause: true }
+                }
             },
-            voice: {
-                micButton: document.getElementById('mic-button'),
-                micIcon: document.getElementById('mic-icon'),
-                micActiveIcon: document.getElementById('mic-active-icon'),
-                statusMessage: document.getElementById('status-message'),
-                transcriptDisplay: document.getElementById('transcript-display')
-            },
-            audioElement: document.getElementById('audio-element')
-        };
+            
+            commands: [
+                { regex: /good morning/i, handler: () => SmartHub.EventHandlers.runScene('goodMorning') },
+                { regex: /movie night/i, handler: () => SmartHub.EventHandlers.runScene('movieNight') },
+                { regex: /good night/i, handler: () => SmartHub.EventHandlers.runScene('goodNight') },
+                { regex: /(turn everything off|all off)/i, handler: () => SmartHub.EventHandlers.runScene('allOff') },
+                { regex: /party time/i, handler: () => SmartHub.EventHandlers.runScene('partyTime') },
+                { regex: /focus mode/i, handler: () => SmartHub.EventHandlers.runScene('focusMode') },
+                { 
+                    regex: /light (on|off)/i,
+                    handler: (matches) => {
+                        const state = SmartHub.state;
+                        if (matches[1] === 'on') {
+                            state.light.intensity = state.light.lastKnownIntensity;
+                            SmartHub.Speech.showStatus("OK, turning on the light.");
+                        } else {
+                            state.light.intensity = 0;
+                            SmartHub.Speech.showStatus("OK, turning off the light.");
+                        }
+                    }
+                },
+                { 
+                    regex: /(set light to|change light to|set light intensity to)/i,
+                    handler: (matches, command) => {
+                        const state = SmartHub.state.light;
+                        const parser = SmartHub.Speech.parseNumber;
+                        const colorMap = SmartHub.config.colorMap;
+                        
+                        const colorWord = Object.keys(colorMap).find(c => command.includes(c));
+                        const intensity = parser(command);
 
-        // --- Playlist (local files). EDIT filenames here if needed ---
-        const playlist = [
-            'song1.mp3',
-            'song2.mp3',
-            'song3.mp3'
-        ];
+                        if (colorWord) {
+                            state.hue = colorMap[colorWord];
+                            if (state.intensity === 0) state.intensity = state.lastKnownIntensity;
+                            SmartHub.Speech.showStatus(`Set light color to ${colorWord}.`);
+                        } else if (intensity !== null && intensity >= 0 && intensity <= 100) {
+                            state.intensity = intensity;
+                            if (intensity > 0) state.lastKnownIntensity = intensity;
+                            SmartHub.Speech.showStatus(`Set light intensity to ${intensity}%.`);
+                        } else {
+                            SmartHub.Speech.showStatus("Didn't catch that. Try 'set light to 50%' or 'set light to blue'.");
+                        }
+                    }
+                },
+                { 
+                    regex: /fan (on|off)/i,
+                    handler: (matches) => {
+                        const state = SmartHub.state;
+                        if (matches[1] === 'on') {
+                            state.fan.speed = state.fan.lastKnownSpeed;
+                            SmartHub.Speech.showStatus("OK, turning on the fan.");
+                        } else {
+                            state.fan.speed = 0;
+                            SmartHub.Speech.showStatus("OK, turning off the fan.");
+                        }
+                    }
+                },
+                { 
+                    regex: /set fan speed to/i,
+                    handler: (matches, command) => {
+                        const speed = SmartHub.Speech.parseNumber(command);
+                        if (speed !== null && speed >= 0 && speed <= 5) {
+                            SmartHub.state.fan.speed = speed;
+                            if (speed > 0) SmartHub.state.fan.lastKnownSpeed = speed;
+                            SmartHub.Speech.showStatus(`Set fan speed to level ${speed}.`);
+                        } else {
+                            SmartHub.Speech.showStatus("Sorry, fan speed is from 0 to 5.");
+                        }
+                    }
+                },
+                { 
+                    regex: /set temperature to/i,
+                    handler: (matches, command) => {
+                        const temp = SmartHub.Speech.parseNumber(command);
+                        if (temp) { 
+                            SmartHub.state.thermostat.temperature = temp; 
+                            SmartHub.Speech.showStatus(`Set temperature to ${temp} degrees.`); 
+                        } else {
+                            SmartHub.Speech.showStatus("Didn't catch the temperature.");
+                        }
+                    }
+                },
+                { regex: /(heat on|set to heat)/i, handler: () => { SmartHub.state.thermostat.mode = 'Heat'; SmartHub.Speech.showStatus("OK, heat mode is on."); } },
+                { regex: /(ac on|set to cool|turn on ac)/i, handler: () => { SmartHub.state.thermostat.mode = 'Cool'; SmartHub.Speech.showStatus("OK, AC mode is on."); } },
+                { regex: /thermostat off/i, handler: () => { SmartHub.state.thermostat.mode = 'Off'; SmartHub.Speech.showStatus("OK, thermostat is off."); } },
+                { regex: /lock the door/i, handler: () => { SmartHub.state.lock.isLocked = true; SmartHub.Speech.showStatus("OK, front door is locked."); } },
+                { regex: /unlock the door/i, handler: () => { SmartHub.state.lock.isLocked = false; SmartHub.Speech.showStatus("OK, front door is unlocked."); } },
+                { regex: /(play music|play)/i, handler: () => { SmartHub.AudioPlayer.play(); SmartHub.Speech.showStatus("OK, playing music."); } },
+                { regex: /(pause music|pause|stop music|stop)/i, handler: () => { SmartHub.AudioPlayer.pause(); SmartHub.Speech.showStatus("OK, stopping music."); } },
+                { regex: /(next track|skip)/i, handler: () => SmartHub.AudioPlayer.next() },
+                { regex: /previous track/i, handler: () => SmartHub.AudioPlayer.prev() },
+                { 
+                    regex: /volume/i,
+                    handler: (matches, command) => {
+                        const vol = SmartHub.Speech.parseNumber(command);
+                        if (vol !== null && vol >= 0 && vol <= 100) { 
+                            SmartHub.AudioPlayer.setVolume(vol); 
+                            SmartHub.Speech.showStatus(`Setting volume to ${vol}%`); 
+                        } else {
+                            SmartHub.Speech.showStatus("Didn't catch the volume level.");
+                        }
+                    }
+                },
+            ]
+        },
 
-        // --- Audio controller using <audio> element for local files ---
-        const audioController = {
-            el: UI.audioElement,
-            init() {
-                // wire events
-                this.el.volume = appState.speaker.volume / 100;
-                this.el.addEventListener('ended', () => {
-                    this.next();
+        // --- 3. UI Element Cache ---
+        UI: {},
+
+        // --- 4. Main Initializer ---
+        init: function() {
+            try {
+                if (window.lucide) {
+                    lucide.createIcons({ width: 24, height: 24 });
+                } else {
+                    console.warn("Lucide icons not loaded. Skipping icon creation.");
+                }
+            } catch (e) {
+                console.error("Error creating icons (this is safe to ignore):", e);
+            }
+            
+            // --- Cache UI Elements ---
+            // This is safe. If an ID is missing, the value will just be 'null'.
+            SmartHub.UI = {
+                body: document.body,
+                timeDisplay: document.getElementById('time-display'),
+                ampmDisplay: document.getElementById('ampm-display'),
+                dateDisplay: document.getElementById('date-display'),
+                weather: {
+                    iconContainer: document.getElementById('weather-icon-container'),
+                    temp: document.getElementById('weather-temp'),
+                    desc: document.getElementById('weather-desc')
+                },
+                light: {
+                    card: document.getElementById('light-card'),
+                    controls: document.getElementById('light-controls'),
+                    intensity: document.getElementById('light-intensity'),
+                    value: document.getElementById('light-intensity-value'),
+                    icon: document.getElementById('light-icon'),
+                    colorControls: document.getElementById('light-color-controls'),
+                    colorSlider: document.getElementById('light-color')
+                },
+                fan: {
+                    card: document.getElementById('fan-card'),
+                    controls: document.getElementById('fan-controls'),
+                    speed: document.getElementById('fan-speed'),
+                    value: document.getElementById('fan-speed-value'),
+                    icon: document.getElementById('fan-icon')
+                },
+                thermostat: {
+                    card: document.getElementById('thermostat-card'),
+                    display: document.getElementById('temp-display'),
+                    modeDisplay: document.getElementById('temp-mode-display'),
+                    icon: document.getElementById('thermostat-icon'),
+                    tempUp: document.getElementById('temp-up'),
+                    tempDown: document.getElementById('temp-down'),
+                    modeContainer: document.getElementById('temp-mode-container'),
+                    modeButtons: document.querySelectorAll('.temp-mode-button')
+                },
+                lock: {
+                    card: document.getElementById('lock-card'),
+                    iconLocked: document.getElementById('lock-icon-locked'),
+                    iconUnlocked: document.getElementById('lock-icon-unlocked'),
+                    button: document.getElementById('lock-toggle-button'),
+                },
+                speaker: {
+                    card: document.getElementById('speaker-card'),
+                    icon: document.getElementById('speaker-icon'),
+                    volume: document.getElementById('speaker-volume'),
+                    value: document.getElementById('speaker-volume-value'),
+                    playButton: document.getElementById('play-pause'),
+                    playIcon: document.getElementById('play-icon'),
+                    pauseIcon: document.getElementById('pause-icon'),
+                    prevButton: document.getElementById('prev-track'),
+                    nextButton: document.getElementById('next-track'),
+                    trackTitle: document.getElementById('track-title'),
+                    nowIcon: document.getElementById('now-playing-icon'),
+                    nowText: document.getElementById('now-playing-text')
+                },
+                scenes: {
+                    goodMorning: document.getElementById('scene-good-morning'),
+                    movieNight: document.getElementById('scene-movie-night'),
+                    goodNight: document.getElementById('scene-good-night'),
+                    allOff: document.getElementById('scene-all-off'),
+                    partyTime: document.getElementById('scene-party-time'),
+                    focusMode: document.getElementById('scene-focus-mode'),
+                },
+                voice: {
+                    micButton: document.getElementById('mic-button'),
+                    micIcon: document.getElementById('mic-icon'),
+                    micActiveIcon: document.getElementById('mic-active-icon'),
+                    statusMessage: document.getElementById('status-message'),
+                    transcriptDisplay: document.getElementById('transcript-display')
+                },
+                addDeviceCard: document.getElementById('add-device-card'),
+                modal: {
+                    overlay: document.getElementById('modal-overlay'),
+                    box: document.getElementById('modal-box'),
+                    closeButton: document.getElementById('modal-close-button')
+                },
+                audioElement: document.getElementById('audio-element')
+            };
+            
+            // --- Initialize Modules (NOW WITH SAFETY CHECKS) ---
+            // These functions won't crash the app if elements are missing.
+            SmartHub.Persistence.loadState();
+            SmartHub.AudioPlayer.init();
+            SmartHub.Speech.init();
+            SmartHub.EventHandlers.registerAll();
+
+            // --- Run Initial Updates ---
+            SmartHub.UIUpdater.updateAllUIs();
+            SmartHub.HeaderDisplay.updateClock(); // This will update the "Loading date..."
+            SmartHub.HeaderDisplay.updateWeather(); // This will update the "75&deg;F"
+            
+            // --- Start Timers ---
+            setInterval(() => SmartHub.HeaderDisplay.updateClock(), 1000); 
+            setInterval(() => SmartHub.HeaderDisplay.updateWeather(), 300000); 
+        },
+        
+        // --- 5. Persistence Module ---
+        Persistence: {
+            saveState: function() {
+                try {
+                    const stateToSave = { ...SmartHub.state };
+                    delete stateToSave.statusTimer;
+                    delete stateToSave.listening;
+                    delete stateToSave.activeScene;
+                    delete stateToSave.currentTheme;
+                    localStorage.setItem('smartHubState', JSON.stringify(stateToSave));
+                } catch (e) {
+                    console.warn("Could not save state to localStorage", e);
+                }
+            },
+            loadState: function() {
+                try {
+                    const savedState = localStorage.getItem('smartHubState');
+                    if (savedState) {
+                        const parsedState = JSON.parse(savedState);
+                        Object.assign(SmartHub.state, parsedState);
+                        SmartHub.state.listening = false;
+                        SmartHub.state.statusTimer = null;
+                        SmartHub.state.activeScene = null;
+                        SmartHub.state.currentTheme = null;
+                    }
+                } catch (e) {
+                    console.warn("Could not load state from localStorage", e);
+                }
+            }
+        },
+
+        // --- 6. Audio Player Module ---
+        AudioPlayer: {
+            init: function() {
+                const el = SmartHub.UI.audioElement;
+                // --- HARDENED: Safety check ---
+                if (!el) {
+                    console.warn("Audio element not found. Speaker card disabled.");
+                    return; 
+                }
+                el.volume = SmartHub.state.speaker.volume / 100;
+                el.addEventListener('ended', () => SmartHub.AudioPlayer.next());
+                el.addEventListener('play', () => {
+                    SmartHub.state.speaker.isPlaying = true;
+                    SmartHub.UIUpdater.updateSpeakerUI();
                 });
-                this.el.addEventListener('play', () => {
-                    appState.speaker.isPlaying = true;
-                    updateSpeakerUI();
-                });
-                this.el.addEventListener('pause', () => {
-                    appState.speaker.isPlaying = false;
-                    updateSpeakerUI();
-                });
-                this.el.addEventListener('loadedmetadata', () => {
-                    // optionally update track duration UI if added
+                el.addEventListener('pause', () => {
+                    SmartHub.state.speaker.isPlaying = false;
+                    SmartHub.UIUpdater.updateSpeakerUI();
                 });
             },
-            loadTrack(index) {
+            loadTrack: function(index) {
+                const el = SmartHub.UI.audioElement;
+                if (!el) return; // Safety check
+                const playlist = SmartHub.config.playlist;
                 if (!playlist.length) return;
-                appState.speaker.trackIndex = ((index % playlist.length) + playlist.length) % playlist.length;
-                const file = playlist[appState.speaker.trackIndex];
-                this.el.src = file;
-                this.el.load();
-                // update title immediately
-                UI.speaker.trackTitle.textContent = file;
+                
+                SmartHub.state.speaker.trackIndex = ((index % playlist.length) + playlist.length) % playlist.length;
+                const file = playlist[SmartHub.state.speaker.trackIndex];
+                
+                el.src = file;
+                el.load();
+                if (SmartHub.UI.speaker.trackTitle) {
+                    SmartHub.UI.speaker.trackTitle.textContent = file.split('/').pop().replace('.mp3', '');
+                }
+                SmartHub.Persistence.saveState();
             },
-            play() {
-                // Ensure user gesture requirement: play returns promise
-                const p = this.el.play();
+            play: function() {
+                const el = SmartHub.UI.audioElement;
+                if (!el) return; // Safety check
+                if (!el.src) {
+                    this.loadTrack(SmartHub.state.speaker.trackIndex);
+                }
+                const p = el.play();
                 if (p && p.catch) {
                     p.catch(err => {
-                        // play blocked by browser autoplay policy
-                        showStatus('Tap play to enable audio playback.');
+                        console.warn("Audio playback error:", err);
+                        SmartHub.Speech.showStatus('Tap play to enable audio playback.', 4000, false);
                     });
                 }
             },
-            pause() {
-                this.el.pause();
+            pause: function() {
+                const el = SmartHub.UI.audioElement;
+                if (!el) return; // Safety check
+                el.pause();
             },
-            next() {
-                this.loadTrack(appState.speaker.trackIndex + 1);
+            next: function() {
+                this.loadTrack(SmartHub.state.speaker.trackIndex + 1);
                 this.play();
-                showStatus('Skipped to next track', 2000, false);
+                SmartHub.Speech.showStatus('Skipped to next track', 2000, false);
             },
-            prev() {
-                this.loadTrack(appState.speaker.trackIndex - 1);
+            prev: function() {
+                this.loadTrack(SmartHub.state.speaker.trackIndex - 1);
                 this.play();
-                showStatus('Playing previous track', 2000, false);
+                SmartHub.Speech.showStatus('Playing previous track', 2000, false);
             },
-            setVolume(percent) {
-                const v = Math.max(0, Math.min(100, Number(percent)));
-                appState.speaker.volume = v;
-                this.el.volume = v / 100;
+            setVolume: function(v) {
+                const el = SmartHub.UI.audioElement;
+                if (!el) return; // Safety check
+                const value = Math.max(0, Math.min(100, Number(v)));
+                SmartHub.state.speaker.volume = value;
+                el.volume = value / 100;
+                SmartHub.UIUpdater.updateSpeakerUI();
             }
-        };
+        },
+        
+        // --- 7. Header Display Module (THIS CONTROLS THE CLOCK/DATE) ---
+        HeaderDisplay: {
+            updateClock: function() {
+                const now = new Date();
+                const UI = SmartHub.UI;
+                
+                // This updates the date
+                if (UI.dateDisplay) {
+                    UI.dateDisplay.textContent = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                }
+                
+                let hours = now.getHours();
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                const seconds = now.getSeconds().toString().padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const displayHours = hours % 12 ? (hours % 12) : 12; // 0 (midnight) becomes 12
+                
+                // This updates the time
+                if (UI.timeDisplay) {
+                    UI.timeDisplay.textContent = `${displayHours.toString().padStart(2, ' ')}:${minutes}:${seconds}`;
+                }
+                if (UI.ampmDisplay) {
+                    UI.ampmDisplay.textContent = ampm;
+                }
+                
+                // This updates the dynamic background
+                let newTheme = 'theme-day'; // Default
+                if (hours >= 5 && hours < 12) newTheme = 'theme-morning';
+                else if (hours >= 12 && hours < 18) newTheme = 'theme-day';
+                else if (hours >= 18 && hours < 22) newTheme = 'theme-evening';
+                else newTheme = 'theme-night';
 
-        // --- Clock ---
-        function updateClock() {
-            const now = new Date();
-            UI.dateDisplay.textContent = now.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-            let hours = now.getHours();
-            const minutes = now.getMinutes().toString().padStart(2,'0');
-            const seconds = now.getSeconds().toString().padStart(2,'0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12; hours = hours ? hours : 12;
-            UI.timeDisplay.textContent = `${hours.toString().padStart(2,' ')}:${minutes}:${seconds}`;
-            UI.ampmDisplay.textContent = ampm;
-        }
-        setInterval(updateClock,1000);
-        updateClock();
-
-        // --- Slider background helper ---
-        function updateSliderBackground(slider, color = '#3b82f6') {
-            const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
-            slider.style.background = `linear-gradient(to right, ${color} ${value}%, #374151 ${value}%)`;
-        }
-
-        // --- Speech synthesis ---
-        function speak(text) {
-            if (!('speechSynthesis' in window)) return;
-            try {
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'en-US';
-                window.speechSynthesis.speak(u);
-            } catch (e) { console.warn('TTS failed', e); }
-        }
-
-        // --- Status helper ---
-        function showStatus(message, duration = 4000, speakMessage = true) {
-            UI.voice.statusMessage.textContent = message;
-            if (appState.statusTimer) clearTimeout(appState.statusTimer);
-            appState.statusTimer = setTimeout(() => {
-                if (UI.voice.statusMessage.textContent === message) UI.voice.statusMessage.textContent = "Tap mic to speak";
-            }, duration);
-            if (speakMessage) speak(message);
-        }
-
-        // --- UI update fns ---
-        function updateLightUI() {
-            const { isOn,intensity,hue } = appState.light;
-            UI.light.card.style.setProperty('--light-hue', hue);
-            UI.light.intensity.value = intensity;
-            UI.light.value.textContent = `${intensity}%`;
-            UI.light.colorSlider.value = hue;
-            updateSliderBackground(UI.light.intensity, `hsl(${hue},100%,50%)`);
-            if (isOn) {
-                UI.light.card.classList.add('border-blue-500');
-                UI.light.controls.classList.remove('opacity-30');
-                UI.light.intensity.disabled = false;
-                UI.light.icon.classList.add('icon-on');
-                UI.light.colorControls.classList.remove('opacity-30');
-                UI.light.colorSlider.disabled = false;
-            } else {
-                UI.light.card.classList.remove('border-blue-500');
-                UI.light.controls.classList.add('opacity-30');
-                UI.light.intensity.disabled = true;
-                UI.light.icon.classList.remove('icon-on');
-                UI.light.colorControls.classList.add('opacity-30');
-                UI.light.colorSlider.disabled = true;
-            }
-        }
-
-        function updateFanUI() {
-            const { isOn,speed } = appState.fan;
-            UI.fan.speed.value = speed;
-            UI.fan.value.textContent = `Level ${speed}`;
-            updateSliderBackground(UI.fan.speed);
-            if (isOn) {
-                UI.fan.card.classList.add('border-blue-500');
-                UI.fan.controls.classList.remove('opacity-30');
-                UI.fan.speed.disabled = false;
-                UI.fan.icon.classList.add('animate-spin');
-            } else {
-                UI.fan.card.classList.remove('border-blue-500');
-                UI.fan.controls.classList.add('opacity-30');
-                UI.fan.speed.disabled = true;
-                UI.fan.icon.classList.remove('animate-spin');
-            }
-        }
-
-        function updateThermostatUI() {
-            const { temperature, mode } = appState.thermostat;
-            UI.thermostat.display.textContent = `${temperature}\u00B0`;
-            UI.thermostat.modeDisplay.textContent = `Mode: ${mode}`;
-            UI.thermostat.icon.classList.remove('text-red-500','text-blue-500');
-            UI.thermostat.card.classList.remove('border-red-500','border-blue-500');
-            UI.thermostat.modeButtons.forEach(btn => {
-                btn.classList.remove('bg-gray-600','text-white');
-                const icon = btn.querySelector('i');
-                if (icon) { icon.classList.add('text-gray-500'); icon.classList.remove('text-red-500','text-blue-500','text-white'); }
-            });
-            let activeBtn;
-            if (mode === 'Heat') { UI.thermostat.icon.classList.add('text-red-500'); UI.thermostat.card.classList.add('border-red-500'); activeBtn = document.getElementById('temp-mode-heat'); if (activeBtn) activeBtn.querySelector('i').classList.add('text-red-500'); }
-            else if (mode === 'Cool') { UI.thermostat.icon.classList.add('text-blue-500'); UI.thermostat.card.classList.add('border-blue-500'); activeBtn = document.getElementById('temp-mode-cool'); if (activeBtn) activeBtn.querySelector('i').classList.add('text-blue-500'); }
-            else { activeBtn = document.getElementById('temp-mode-off'); if (activeBtn) activeBtn.querySelector('i').classList.add('text-white'); }
-            if (activeBtn) activeBtn.classList.add('bg-gray-600');
-        }
-
-        function updateLockUI() {
-            const { isLocked } = appState.lock;
-            if (isLocked) {
-                UI.lock.iconLocked.classList.remove('hidden');
-                UI.lock.iconUnlocked.classList.add('hidden');
-                UI.lock.button.textContent = 'Unlock';
-                UI.lock.button.classList.add('bg-gray-700','hover:bg-gray-600');
-                UI.lock.button.classList.remove('bg-green-600','hover:bg-green-500');
-                UI.lock.status.textContent = 'Status: Locked';
-                UI.lock.card.classList.remove('border-green-500');
-            } else {
-                UI.lock.iconLocked.classList.add('hidden');
-                UI.lock.iconUnlocked.classList.remove('hidden');
-                UI.lock.button.textContent = 'Lock';
-                UI.lock.button.classList.remove('bg-gray-700','hover:bg-gray-600');
-                UI.lock.button.classList.add('bg-green-600','hover:bg-green-500');
-                UI.lock.status.textContent = 'Status: Unlocked';
-                UI.lock.card.classList.add('border-green-500');
-            }
-        }
-
-        function updateSpeakerUI() {
-            const { isPlaying, volume, trackIndex } = appState.speaker;
-            UI.speaker.volume.value = volume;
-            UI.speaker.value.textContent = `${volume}%`;
-            updateSliderBackground(UI.speaker.volume, '#3b82f6');
-
-            // Ensure audioController volume is synced
-            audioController.setVolume(volume);
-
-            if (isPlaying) {
-                UI.speaker.playIcon.classList.add('hidden');
-                UI.speaker.pauseIcon.classList.remove('hidden');
-                UI.speaker.icon.classList.add('text-blue-500');
-                UI.speaker.card.classList.add('border-blue-500');
-                const trackName = playlist[trackIndex] || 'Unknown track';
-                UI.speaker.trackTitle.textContent = `Playing: ${trackName}`;
-                UI.speaker.nowIcon.classList.add('text-blue-500','glow-animate');
-                UI.speaker.nowText.textContent = 'Now Playing';
-                UI.speaker.nowText.classList.add('text-blue-400');
-            } else {
-                UI.speaker.playIcon.classList.remove('hidden');
-                UI.speaker.pauseIcon.classList.add('hidden');
-                UI.speaker.icon.classList.remove('text-blue-500');
-                UI.speaker.card.classList.remove('border-blue-500');
-                if (!UI.speaker.trackTitle.textContent) UI.speaker.trackTitle.textContent = 'Paused';
-                UI.speaker.nowIcon.classList.remove('text-blue-500','glow-animate');
-                UI.speaker.nowText.textContent = 'Idle';
-                UI.speaker.nowText.classList.remove('text-blue-400');
-            }
-
-            // re-render lucide icons
-            if (window.lucide) lucide.createIcons();
-        }
-
-        function updateActiveScene() {
-            Object.values(UI.scenes).forEach(button => button.classList.remove('active'));
-            const key = appState.activeScene;
-            if (key && UI.scenes[key]) UI.scenes[key].classList.add('active');
-        }
-
-        function updateAllUIs() {
-            updateLightUI();
-            updateFanUI();
-            updateThermostatUI();
-            updateLockUI();
-            updateSpeakerUI();
-            updateActiveScene();
-            if (window.lucide) lucide.createIcons();
-        }
-
-        // --- Event listeners / controls
-        UI.light.card.addEventListener('click', (e)=>{ if (e.target===UI.light.intensity||e.target===UI.light.colorSlider) return; appState.light.isOn=!appState.light.isOn; updateLightUI(); });
-        UI.light.intensity.addEventListener('input', (e)=>{ appState.light.intensity = e.target.value; if (appState.light.intensity > 0) appState.light.isOn = true; updateLightUI(); });
-        UI.light.colorSlider.addEventListener('input', (e)=>{ appState.light.hue = e.target.value; if (!appState.light.isOn) appState.light.isOn=true; const pos = ((e.target.value - e.target.min)/(e.target.max-e.target.min))*100; e.target.style.setProperty('--thumb-position', `${pos}%`); updateLightUI(); });
-
-        UI.fan.card.addEventListener('click',(e)=>{ if (e.target===UI.fan.speed) return; appState.fan.isOn=!appState.fan.isOn; updateFanUI(); });
-        UI.fan.speed.addEventListener('input',(e)=>{ appState.fan.speed = e.target.value; if (appState.fan.speed>0) appState.fan.isOn=true; updateFanUI(); });
-
-        UI.thermostat.tempUp.addEventListener('click', ()=>{ appState.thermostat.temperature++; updateThermostatUI();});
-        UI.thermostat.tempDown.addEventListener('click', ()=>{ appState.thermostat.temperature--; updateThermostatUI();});
-        UI.thermostat.modeContainer.addEventListener('click',(e)=>{ const btn = e.target.closest('.temp-mode-button'); if (btn && btn.dataset.mode){ appState.thermostat.mode = btn.dataset.mode; updateThermostatUI(); }});
-
-        UI.lock.button.addEventListener('click', ()=>{ appState.lock.isLocked = !appState.lock.isLocked; updateLockUI(); });
-
-        // Speaker listeners
-        UI.speaker.volume.addEventListener('input', (e)=>{ const v = Number(e.target.value); appState.speaker.volume = v; updateSpeakerUI(); });
-        UI.speaker.playButton.addEventListener('click', (e)=>{ e.stopPropagation(); if (!appState.speaker.isPlaying){ // if not loaded, load current track
-                if (!UI.audioElement.src) { audioController.loadTrack(appState.speaker.trackIndex); }
-                audioController.play();
-            } else { audioController.pause(); }
-        });
-        UI.speaker.nextButton.addEventListener('click', (e)=>{ e.stopPropagation(); audioController.next(); });
-        UI.speaker.prevButton.addEventListener('click', (e)=>{ e.stopPropagation(); audioController.prev(); });
-
-        // Scenes
-        function runScene(sceneName){
-            appState.activeScene = sceneName;
-            switch(sceneName){
-                case 'goodMorning':
-                    appState.light = { isOn:true, intensity:70, hue:50 };
-                    appState.fan = { isOn:false, speed:0 };
-                    appState.thermostat = { temperature:68, mode:'Heat' };
-                    appState.lock = { isLocked:false };
-                    showStatus("Activated 'Good Morning' scene.");
-                    break;
-                case 'movieNight':
-                    appState.light = { isOn:true, intensity:20, hue:240 };
-                    appState.fan = { isOn:true, speed:1 };
-                    appState.speaker = { ...appState.speaker, isPlaying:true, volume:40 };
-                    audioController.loadTrack(appState.speaker.trackIndex);
-                    audioController.play();
-                    appState.lock = { isLocked:true };
-                    showStatus("Activated 'Movie Night' scene.");
-                    break;
-                case 'goodNight':
-                    appState.light = { isOn:false, intensity:0, hue: appState.light.hue };
-                    appState.fan = { isOn:false, speed:0 };
-                    appState.speaker = { ...appState.speaker, isPlaying:false, volume:0 };
-                    audioController.pause();
-                    appState.lock = { isLocked:true };
-                    appState.thermostat = { temperature:65, mode:'Heat' };
-                    showStatus("Activated 'Good Night' scene.");
-                    break;
-                case 'allOff':
-                    appState.light = { isOn:false, intensity:0, hue: appState.light.hue };
-                    appState.fan = { isOn:false, speed:0 };
-                    appState.speaker = { ...appState.speaker, isPlaying:false, volume:0 };
-                    audioController.pause();
-                    appState.thermostat.mode = 'Off';
-                    showStatus("Turned all devices off.");
-                    break;
-            }
-            updateAllUIs();
-        }
-        Object.values(UI.scenes).forEach(button => { button.addEventListener('click', (e)=>{ runScene(e.currentTarget.dataset.scene); }); });
-
-        // initialize audio controller
-        audioController.init();
-        // load initial track (so metadata shows on first play)
-        if (playlist.length) audioController.loadTrack(appState.speaker.trackIndex);
-
-        function updateAllUIsOnLoad() {
-            updateAllUIs();
-            if (window.lucide) lucide.createIcons();
-        }
-        updateAllUIsOnLoad();
-
-        // --- Web Speech API (voice control) ---
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            showStatus("Speech recognition not supported by this browser.");
-            UI.voice.micButton.disabled = true;
-            UI.voice.micButton.classList.add('opacity-50','cursor-not-allowed');
-        } else {
-            const recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
-            UI.voice.micButton.addEventListener('click', () => { recognition.start(); appState.activeScene = null; updateActiveScene(); });
-
-            recognition.onstart = () => {
-                UI.voice.statusMessage.textContent = "Listening...";
-                if (appState.statusTimer) clearTimeout(appState.statusTimer);
-                UI.voice.transcriptDisplay.textContent = "";
-                UI.voice.micButton.disabled = true;
-                UI.voice.micButton.classList.add('animate-pulse','bg-red-600');
-                UI.voice.micIcon.classList.add('hidden');
-                UI.voice.micActiveIcon.classList.remove('hidden');
-            };
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript.toLowerCase().trim();
-                UI.voice.transcriptDisplay.textContent = `"${transcript}"`;
-                processCommand(transcript);
-            };
-
-            recognition.onspeechend = () => recognition.stop();
-
-            recognition.onerror = (event) => {
-                showStatus(event.error === 'no-speech' ? "Didn't hear anything." : `Error: ${event.error}`);
-            };
-
-            recognition.onend = () => {
-                UI.voice.micButton.disabled = false;
-                UI.voice.micButton.classList.remove('animate-pulse','bg-red-600');
-                UI.voice.micIcon.classList.remove('hidden');
-                UI.voice.micActiveIcon.classList.add('hidden');
-            };
-        }
-
-        // --- Command processing (voice) ---
-        function processCommand(command) {
-            let processed = false;
-            if (command.includes('good morning')){ runScene('goodMorning'); processed = true; }
-            else if (command.includes('movie night')){ runScene('movieNight'); processed = true; }
-            else if (command.includes('good night')){ runScene('goodNight'); processed = true; }
-            else if (command.includes('turn everything off') || command.includes('all off')){ runScene('allOff'); processed = true; }
-
-            // lights
-            else if (command.includes('light on') || command.includes('turn on light')){ appState.light.isOn = true; showStatus("OK, turning on the light."); processed = true; }
-            else if (command.includes('light off') || command.includes('turn off light')){ appState.light.isOn = false; showStatus("OK, turning off the light."); processed = true; }
-            else if (command.includes('set light to') || command.includes('change light to') || command.includes('set light intensity')) {
-                const colorWord = Object.keys(colorMap).find(color => command.includes(color));
-                const intensity = parseNumber(command);
-                if (colorWord) {
-                    appState.light.hue = colorMap[colorWord];
-                    appState.light.isOn = true;
-                    showStatus(`Set light color to ${colorWord}.`);
-                    processed = true;
-                } else if (intensity !== null && intensity >= 0 && intensity <= 100) {
-                    appState.light = { ...appState.light, isOn:true, intensity:intensity };
-                    showStatus(`Set light intensity to ${intensity}%.`);
-                    processed = true;
-                } else {
-                    showStatus("Sorry, I don't recognize that color or intensity.");
-                    processed = true;
+                if (newTheme !== SmartHub.state.currentTheme && UI.body) {
+                    if (SmartHub.state.currentTheme) UI.body.classList.remove(SmartHub.state.currentTheme);
+                    UI.body.classList.add(newTheme);
+                    SmartHub.state.currentTheme = newTheme;
+                }
+            },
+            updateWeather: function() {
+                const mockWeather = SmartHub.config.mockWeather;
+                SmartHub.state.currentMockWeatherIndex = (SmartHub.state.currentMockWeatherIndex + 1) % mockWeather.length;
+                const weather = mockWeather[SmartHub.state.currentMockWeatherIndex];
+                
+                const tempFluctuation = Math.floor(Math.random() * 3) - 1; // -1 to +1
+                const displayTemp = weather.temp + tempFluctuation;
+                
+                if (SmartHub.UI.weather && SmartHub.UI.weather.temp) {
+                    SmartHub.UI.weather.temp.innerHTML = `${displayTemp}&deg;F`;
+                    SmartHub.UI.weather.desc.textContent = weather.desc;
+                    SmartHub.UI.weather.iconContainer.innerHTML = `<i data-lucide="${weather.icon}" class="w-10 h-10 ${weather.color}"></i>`;
+                    
+                    try {
+                        if (window.lucide) {
+                            lucide.createIcons({
+                                nodes: [SmartHub.UI.weather.iconContainer.querySelector('i')]
+                            });
+                        }
+                    } catch (e) {
+                        console.error("Failed to create weather icon:", e);
+                    }
                 }
             }
+        },
 
-            // fan
-            else if (command.includes('fan on') || command.includes('turn on fan')){ appState.fan.isOn = true; showStatus("OK, turning on the fan."); processed = true; }
-            else if (command.includes('fan off') || command.includes('turn off fan')){ appState.fan.isOn = false; showStatus("OK, turning off the fan."); processed = true; }
-            else if (command.includes('set fan speed to') || command.includes('set fan to')) {
-                const speed = parseNumber(command);
-                if (speed !== null && speed >= 0 && speed <= 5) { appState.fan = { isOn:true, speed: speed }; showStatus(`Set fan speed to level ${speed}.`); }
-                else showStatus("Sorry, I didn't catch the fan speed.");
-                processed = true;
+        // --- 8. UI Updater Module ---
+        UIUpdater: {
+            updateSliderBackground: function(slider, color = '#3b82f6') {
+                if (!slider) return;
+                const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+                slider.style.background = `linear-gradient(to right, ${color} ${value}%, #374151 ${value}%)`;
+            },
+            updateLightUI: function() {
+                const { intensity, hue } = SmartHub.state.light;
+                const isOn = intensity > 0;
+                const UI = SmartHub.UI.light;
+                if (!UI || !UI.card) return; // --- HARDENED: Safety check ---
+
+                UI.card.style.setProperty('--light-hue', hue);
+                UI.intensity.style.setProperty('--thumb-border-color', `hsl(${hue},100%,50%)`);
+                UI.intensity.value = intensity;
+                UI.value.textContent = `${intensity}%`;
+                UI.colorSlider.value = hue;
+                SmartHub.UIUpdater.updateSliderBackground(UI.intensity, `hsl(${hue},100%,50%)`);
+                
+                if (isOn) {
+                    UI.card.classList.add('border-blue-500');
+                    UI.icon.classList.add('icon-on');
+                } else {
+                    UI.card.classList.remove('border-blue-500');
+                    UI.icon.classList.remove('icon-on');
+                    UI.intensity.style.setProperty('--thumb-border-color', `#3b82f6`);
+                }
+                UI.card.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+                SmartHub.Persistence.saveState();
+            },
+            updateFanUI: function() {
+                const { speed } = SmartHub.state.fan;
+                const isOn = speed > 0;
+                const UI = SmartHub.UI.fan;
+                if (!UI || !UI.card) return; // --- HARDENED: Safety check ---
+
+                UI.speed.value = speed;
+                UI.value.textContent = `Level ${speed}`;
+                SmartHub.UIUpdater.updateSliderBackground(UI.speed);
+                
+                if (isOn) {
+                    UI.card.classList.add('border-blue-500');
+                    UI.icon.classList.add('animate-spin');
+                    const duration = Math.max(0.5, 6 - speed); 
+                    UI.icon.style.animationDuration = `${duration}s`;
+                } else {
+                    UI.card.classList.remove('border-blue-500');
+                    UI.icon.classList.remove('animate-spin');
+                    UI.icon.style.animationDuration = ``;
+                }
+                UI.card.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+                SmartHub.Persistence.saveState();
+            },
+            updateThermostatUI: function() {
+                const { temperature, mode } = SmartHub.state.thermostat;
+                const UI = SmartHub.UI.thermostat;
+                if (!UI || !UI.card) return; // --- HARDENED: Safety check ---
+
+                UI.display.textContent = `${temperature}\u00B0`;
+                UI.modeDisplay.textContent = `Mode: ${mode}`;
+                UI.icon.classList.remove('text-red-500', 'text-blue-500', 'text-gray-500');
+                UI.card.classList.remove('border-red-500', 'border-blue-500');
+                
+                UI.modeButtons.forEach(btn => {
+                    btn.classList.remove('bg-gray-600', 'text-white');
+                    const icon = btn.querySelector('i');
+                    if (icon) { icon.classList.add('text-gray-500'); icon.classList.remove('text-red-500', 'text-blue-500', 'text-white'); }
+                });
+                
+                let activeBtn;
+                if (mode === 'Heat') { 
+                    UI.icon.classList.add('text-red-500'); 
+                    UI.card.classList.add('border-red-500'); 
+                    activeBtn = document.getElementById('temp-mode-heat'); 
+                    if (activeBtn) activeBtn.querySelector('i').classList.add('text-red-500'); 
+                }
+                else if (mode === 'Cool') { 
+                    UI.icon.classList.add('text-blue-500'); 
+                    UI.card.classList.add('border-blue-500'); 
+                    activeBtn = document.getElementById('temp-mode-cool'); 
+                    if (activeBtn) activeBtn.querySelector('i').classList.add('text-blue-500'); 
+                }
+                else { 
+                    UI.icon.classList.add('text-gray-500');
+                    activeBtn = document.getElementById('temp-mode-off'); 
+                    if (activeBtn) activeBtn.querySelector('i').classList.add('text-white'); 
+                }
+                if (activeBtn) activeBtn.classList.add('bg-gray-600');
+                
+                SmartHub.Persistence.saveState();
+            },
+            updateLockUI: function() {
+                const { isLocked } = SmartHub.state.lock;
+                const UI = SmartHub.UI.lock;
+                if (!UI || !UI.card) return; // --- HARDENED: Safety check ---
+
+                if (isLocked) {
+                    UI.iconLocked.classList.remove('hidden');
+                    UI.iconUnlocked.classList.add('hidden');
+                    UI.button.textContent = 'Unlock';
+                    UI.button.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                    UI.button.classList.remove('bg-green-600', 'hover:bg-green-500');
+                    UI.card.classList.remove('border-green-500');
+                } else {
+                    UI.iconLocked.classList.add('hidden');
+                    UI.iconUnlocked.classList.remove('hidden');
+                    UI.button.textContent = 'Lock';
+                    UI.button.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+                    UI.button.classList.add('bg-green-600', 'hover:bg-green-500');
+                    UI.card.classList.add('border-green-500');
+                }
+                SmartHub.Persistence.saveState();
+            },
+            updateSpeakerUI: function() {
+                const { isPlaying, volume, trackIndex } = SmartHub.state.speaker;
+                const UI = SmartHub.UI.speaker;
+                if (!UI || !UI.card) return; // --- HARDENED: Safety check ---
+                const trackName = (SmartHub.config.playlist[trackIndex] || 'Unknown track').split('/').pop().replace('.mp3', '');
+
+                UI.volume.value = volume;
+                UI.value.textContent = `${volume}%`;
+                SmartHub.UIUpdater.updateSliderBackground(UI.volume, '#3b82f6');
+                UI.playButton.setAttribute('aria-label', isPlaying ? 'Pause Music' : 'Play Music');
+
+                if (isPlaying) {
+                    UI.playIcon.classList.add('hidden');
+                    UI.pauseIcon.classList.remove('hidden');
+                    UI.icon.classList.add('text-blue-500');
+                    UI.card.classList.add('border-blue-500');
+                    UI.trackTitle.textContent = `Playing: ${trackName}`;
+                    UI.nowIcon.classList.add('text-blue-500', 'glow-animate');
+                    UI.nowText.textContent = 'Now Playing';
+                    UI.nowText.classList.add('text-blue-400');
+                } else {
+                    UI.playIcon.classList.remove('hidden');
+                    UI.pauseIcon.classList.add('hidden');
+                    UI.icon.classList.remove('text-blue-500');
+                    UI.card.classList.remove('border-blue-500');
+                    UI.trackTitle.textContent = SmartHub.UI.audioElement && SmartHub.UI.audioElement.src ? `Paused: ${trackName}` : 'Paused';
+                    UI.nowIcon.classList.remove('text-blue-500', 'glow-animate');
+                    UI.nowText.textContent = 'Idle';
+                    UI.nowText.classList.remove('text-blue-400');
+                }
+                SmartHub.Persistence.saveState();
+            },
+            updateActiveScene: function() {
+                Object.values(SmartHub.UI.scenes).forEach(button => {
+                    if (button) button.classList.remove('active');
+                });
+                const key = SmartHub.state.activeScene;
+                if (key && SmartHub.UI.scenes[key]) SmartHub.UI.scenes[key].classList.add('active');
+            },
+            updateAllUIs: function() {
+                this.updateLightUI();
+                this.updateFanUI();
+                this.updateThermostatUI();
+                this.updateLockUI();
+                this.updateSpeakerUI();
+                this.updateActiveScene();
             }
+        },
+        
+        // --- 9. Event Handlers Module ---
+        EventHandlers: {
+            registerAll: function() {
+                const UI = SmartHub.UI;
+                const Handlers = SmartHub.EventHandlers;
 
-            // thermostat
-            else if (command.includes('set temperature to') || command.includes('set thermostat to')) {
-                const temp = parseNumber(command);
-                if (temp) { appState.thermostat.temperature = temp; showStatus(`Set temperature to ${temp} degrees.`); } else { showStatus("Didn't catch the temperature."); }
-                processed = true;
-            } else if (command.includes('turn on heat') || command.includes('set to heat')){ appState.thermostat.mode = 'Heat'; showStatus("OK, heat is on."); processed = true; }
-            else if (command.includes('turn on ac') || command.includes('set to cool')){ appState.thermostat.mode = 'Cool'; showStatus("OK, AC is on."); processed = true; }
-            else if (command.includes('turn off thermostat') || command.includes('thermostat off')){ appState.thermostat.mode = 'Off'; showStatus("OK, thermostat is off."); processed = true; }
+                // --- HARDENED: All handlers are now wrapped in safety checks ---
+                if (UI.light.card) {
+                    UI.light.card.addEventListener('click', Handlers.lightCardClickHandler);
+                    UI.light.card.addEventListener('keydown', (e) => Handlers.handleCardKeyPress(e, Handlers.lightCardClickHandler));
+                    UI.light.intensity.addEventListener('input', (e) => {
+                        const newValue = Number(e.target.value);
+                        SmartHub.state.light.intensity = newValue;
+                        if (newValue > 0) { SmartHub.state.light.lastKnownIntensity = newValue; }
+                        SmartHub.UIUpdater.updateLightUI();
+                    });
+                    UI.light.colorSlider.addEventListener('input', (e) => { 
+                        SmartHub.state.light.hue = e.target.value; 
+                        if (SmartHub.state.light.intensity === 0) { SmartHub.state.light.intensity = SmartHub.state.light.lastKnownIntensity; }
+                        SmartHub.UIUpdater.updateLightUI(); 
+                    });
+                }
 
-            // lock
-            else if (command.includes('lock the door') || command.includes('lock door')){ appState.lock.isLocked = true; showStatus("OK, front door is locked."); processed = true; }
-            else if (command.includes('unlock the door') || command.includes('unlock door')){ appState.lock.isLocked = false; showStatus("OK, front door is unlocked."); processed = true; }
+                if (UI.fan.card) {
+                    UI.fan.card.addEventListener('click', Handlers.fanCardClickHandler);
+                    UI.fan.card.addEventListener('keydown', (e) => Handlers.handleCardKeyPress(e, Handlers.fanCardClickHandler));
+                    UI.fan.speed.addEventListener('input', (e) => {
+                        const newValue = Number(e.target.value);
+                        SmartHub.state.fan.speed = newValue;
+                        if (newValue > 0) { SmartHub.state.fan.lastKnownSpeed = newValue; }
+                        SmartHub.UIUpdater.updateFanUI();
+                    });
+                }
 
-            // speaker (voice aware)
-            else if (command.includes('play music') || command.includes('play speaker') || command.includes('turn on speaker') || (command.includes('play') && command.includes('music')===false && command.includes('song') ) ) {
-                // if no src loaded, load current track
-                if (!UI.audioElement.src) audioController.loadTrack(appState.speaker.trackIndex);
-                audioController.play();
-                showStatus("OK, playing music.");
-                processed = true;
-            } else if (command.includes('stop music') || command.includes('pause music') || command.includes('turn off speaker') || command.includes('pause')) {
-                audioController.pause();
-                showStatus("OK, stopping music.");
-                processed = true;
-            } else if (command.includes('next track') || command.includes('next song') || command.includes('skip')) {
-                audioController.next();
-                processed = true;
-            } else if (command.includes('previous track') || command.includes('last song') || command.includes('previous song')) {
-                audioController.prev();
-                processed = true;
-            } else if (command.includes('set volume to') || command.includes('volume to')) {
-                const vol = parseNumber(command);
-                if (vol !== null && vol >= 0 && vol <= 100) {
-                    audioController.setVolume(vol);
-                    showStatus(`Set volume to ${vol}%.`);
-                } else showStatus("Sorry, I didn't catch the volume level.");
-                processed = true;
+                if (UI.thermostat.tempUp) {
+                    UI.thermostat.tempUp.addEventListener('click', () => { SmartHub.state.thermostat.temperature++; SmartHub.UIUpdater.updateThermostatUI(); });
+                    UI.thermostat.tempDown.addEventListener('click', () => { SmartHub.state.thermostat.temperature--; SmartHub.UIUpdater.updateThermostatUI(); });
+                    UI.thermostat.modeContainer.addEventListener('click', (e) => { 
+                        const btn = e.target.closest('.temp-mode-button'); 
+                        if (btn && btn.dataset.mode) { 
+                            SmartHub.state.thermostat.mode = btn.dataset.mode; 
+                            SmartHub.UIUpdater.updateThermostatUI(); 
+                        } 
+                    });
+                }
+
+                if (UI.lock.button) {
+                    UI.lock.button.addEventListener('click', () => { SmartHub.state.lock.isLocked = !SmartHub.state.lock.isLocked; SmartHub.UIUpdater.updateLockUI(); });
+                }
+
+                if (UI.speaker.volume) {
+                    UI.speaker.volume.addEventListener('input', (e) => SmartHub.AudioPlayer.setVolume(Number(e.target.value)));
+                    UI.speaker.playButton.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (!SmartHub.state.speaker.isPlaying) { 
+                            SmartHub.AudioPlayer.play();
+                        } else {
+                            SmartHub.AudioPlayer.pause();
+                        }
+                    });
+                    UI.speaker.nextButton.addEventListener('click', (e) => { e.stopPropagation(); SmartHub.AudioPlayer.next(); });
+                    UI.speaker.prevButton.addEventListener('click', (e) => { e.stopPropagation(); SmartHub.AudioPlayer.prev(); });
+                }
+
+                Object.values(UI.scenes).forEach(button => { 
+                    if (button) button.addEventListener('click', (e) => Handlers.runScene(e.currentTarget.dataset.scene)); 
+                });
+
+                if (UI.addDeviceCard) {
+                    UI.addDeviceCard.addEventListener('click', SmartHub.Modal.open);
+                    UI.addDeviceCard.addEventListener('keydown', (e) => Handlers.handleCardKeyPress(e, SmartHub.Modal.open));
+                }
+                if (UI.modal.closeButton) {
+                    UI.modal.closeButton.addEventListener('click', SmartHub.Modal.close);
+                    UI.modal.overlay.addEventListener('click', SmartHub.Modal.close);
+                }
+
+                document.querySelectorAll(".ripple-button").forEach(button => {
+                    button.addEventListener("click", SmartHub.Effects.createRipple);
+                });
+
+                if (UI.voice.micButton) {
+                    UI.voice.micButton.addEventListener('click', () => SmartHub.Speech.toggleListen());
+                }
+            },
+
+            lightCardClickHandler: function(e) {
+                if (e.target.type === 'range') return;
+                if (SmartHub.state.light.intensity > 0) {
+                    SmartHub.state.light.intensity = 0;
+                } else {
+                    SmartHub.state.light.intensity = SmartHub.state.light.lastKnownIntensity;
+                }
+                SmartHub.UIUpdater.updateLightUI();
+            },
+
+            fanCardClickHandler: function(e) {
+                if (e.target.type === 'range') return;
+                if (SmartHub.state.fan.speed > 0) {
+                    SmartHub.state.fan.speed = 0;
+                } else {
+                    SmartHub.state.fan.speed = SmartHub.state.fan.lastKnownSpeed;
+                }
+                SmartHub.UIUpdater.updateFanUI();
+            },
+
+            handleCardKeyPress: function(event, clickHandler) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    clickHandler(event);
+                }
+            },
+
+            runScene: function(sceneName) {
+                const scene = SmartHub.config.scenes[sceneName];
+                if (!scene) {
+                    console.warn(`Scene "${sceneName}" not found.`);
+                    return;
+                }
+                SmartHub.state.activeScene = sceneName;
+                if (scene.updates) {
+                    for (const key in scene.updates) {
+                        if (SmartHub.state[key]) {
+                            Object.assign(SmartHub.state[key], scene.updates[key]);
+                        }
+                    }
+                }
+                if (scene.audio) {
+                    if (scene.audio.volume !== undefined) {
+                        SmartHub.AudioPlayer.setVolume(scene.audio.volume);
+                    }
+                    if (scene.audio.play) {
+                        SmartHub.AudioPlayer.play();
+                    } else if (scene.audio.pause) {
+                        SmartHub.AudioPlayer.pause();
+                    }
+                }
+                SmartHub.Speech.showStatus(scene.message);
+                SmartHub.UIUpdater.updateAllUIs();
             }
+        },
+        
+        // --- 10. Modal Module ---
+        Modal: {
+            open: function() {
+                if (!SmartHub.UI.modal.overlay) return; // Safety check
+                SmartHub.UI.modal.overlay.classList.remove('modal-hidden');
+                SmartHub.UI.modal.box.classList.remove('modal-hidden');
+                try {
+                    if (window.lucide) {
+                        lucide.createIcons({
+                            nodes: SmartHub.UI.modal.box.querySelectorAll('[data-lucide]')
+                        });
+                    }
+                } catch (e) {
+                    console.error("Failed to create modal icons:", e);
+                }
+            },
+            close: function() {
+                if (!SmartHub.UI.modal.overlay) return; // Safety check
+                SmartHub.UI.modal.overlay.classList.add('modal-hidden');
+                SmartHub.UI.modal.box.classList.add('modal-hidden');
+            }
+        },
 
-            if (!processed) showStatus("Sorry, I don't understand that command.");
-            updateAllUIs();
+        // --- 11. Effects Module ---
+        Effects: {
+            createRipple: function(event) {
+                const button = event.currentTarget;
+                if (!button) return;
+                const oldRipple = button.querySelector(".ripple");
+                if (oldRipple) { oldRipple.remove(); }
+
+                const circle = document.createElement("span");
+                const diameter = Math.max(button.clientWidth, button.clientHeight);
+                const radius = diameter / 2;
+                const rect = button.getBoundingClientRect();
+                
+                circle.style.width = circle.style.height = `${diameter}px`;
+                circle.style.left = `${event.clientX - rect.left - radius}px`;
+                circle.style.top = `${event.clientY - rect.top - radius}px`;
+                circle.classList.add("ripple");
+                
+                button.appendChild(circle);
+            }
+        },
+        
+        // --- 12. Speech Recognition & TTS Module ---
+        Speech: {
+            recognition: null,
+            init: function() {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    if (SmartHub.UI.voice && SmartHub.UI.voice.statusMessage) { // Safety check
+                        this.showStatus("Speech recognition not supported.", 4000, false); 
+                        if (SmartHub.UI.voice.micButton) {
+                            SmartHub.UI.voice.micButton.disabled = true;
+                            SmartHub.UI.voice.micButton.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
+                    }
+                    return;
+                }
+                
+                this.recognition = new SpeechRecognition();
+                this.recognition.continuous = false;
+                this.recognition.lang = 'en-US';
+                this.recognition.interimResults = false;
+                this.recognition.maxAlternatives = 1;
+
+                this.recognition.onstart = this.onStart.bind(this);
+                this.recognition.onresult = this.onResult.bind(this);
+                this.recognition.onspeechend = () => this.recognition.stop();
+                this.recognition.onerror = this.onError.bind(this);
+                this.recognition.onend = this.onEnd.bind(this);
+            },
+            toggleListen: function() {
+                if (!this.recognition) return;
+                if (SmartHub.state.listening) {
+                    this.recognition.stop();
+                } else {
+                    try { this.recognition.start(); } 
+                    catch (err) { this.showStatus("Cannot start mic. Check permissions.", 4000, false); }
+                }
+            },
+            onStart: function() {
+                if (!SmartHub.UI.voice) return;
+                SmartHub.state.listening = true;
+                this.showStatus("Listening...", 10000, false);
+                SmartHub.UI.voice.transcriptDisplay.textContent = "";
+                SmartHub.UI.voice.micButton.classList.add('animate-pulse', 'bg-red-600');
+                SmartHub.UI.voice.micIcon.classList.add('hidden');
+                SmartHub.UI.voice.micActiveIcon.classList.remove('hidden');
+            },
+            onEnd: function() {
+                if (!SmartHub.UI.voice) return;
+                SmartHub.state.listening = false;
+                SmartHub.UI.voice.micButton.classList.remove('animate-pulse', 'bg-red-600');
+                SmartHub.UI.voice.micIcon.classList.remove('hidden');
+                SmartHub.UI.voice.micActiveIcon.classList.add('hidden');
+            },
+            onError: function(event) {
+                this.showStatus(event.error === 'no-speech' ? "Didn't hear anything." : `Error: ${event.error}`, 4000, false);
+            },
+            onResult: function(event) {
+                if (!SmartHub.UI.voice) return;
+                const transcript = event.results[0][0].transcript.toLowerCase().trim();
+                SmartHub.UI.voice.transcriptDisplay.textContent = `"${transcript}"`;
+                this.processCommand(transcript);
+            },
+            speak: function(text) {
+                if (!('speechSynthesis' in window)) return;
+                try {
+                    window.speechSynthesis.cancel();
+                    const u = new SpeechSynthesisUtterance(text);
+                    u.lang = 'en-US';
+                    window.speechSynthesis.speak(u);
+                } catch (e) { console.warn('TTS failed', e); }
+            },
+            showStatus: function(message, duration = 4000, speakMessage = true) {
+                if (SmartHub.UI.voice && SmartHub.UI.voice.statusMessage) {
+                    SmartHub.UI.voice.statusMessage.textContent = message;
+                }
+                if (SmartHub.state.statusTimer) clearTimeout(SmartHub.state.statusTimer);
+                SmartHub.state.statusTimer = setTimeout(() => {
+                    if (SmartHub.UI.voice && SmartHub.UI.voice.statusMessage && SmartHub.UI.voice.statusMessage.textContent === message) {
+                        SmartHub.UI.voice.statusMessage.textContent = "Tap mic to speak";
+                    }
+                }, duration);
+                if (speakMessage) this.speak(message);
+            },
+            parseNumber: function(command) {
+                if (!command || typeof command !== 'string') return null;
+                const digitMatch = command.match(/(\d+)/);
+                if (digitMatch) return parseInt(digitMatch[1], 10);
+                
+                const tokens = command.toLowerCase().split(/[^a-z]+/).filter(Boolean);
+                let total = 0, current = 0, found = false;
+                for (const t of tokens) {
+                    const map = SmartHub.config.wordToNumberMap;
+                    if (!(t in map)) { if (current > 0) { total += current; current = 0; } continue; }
+                    found = true;
+                    const val = map[t];
+                    if (val === 100) current = (current || 1) * 100; else current += val;
+                }
+                total += current;
+                return found ? total : null;
+            },
+            
+            processCommand: function(command) {
+                let processed = false;
+                for (const cmd of SmartHub.config.commands) {
+                    const matches = command.match(cmd.regex);
+                    if (matches) {
+                        cmd.handler(matches, command);
+                        processed = true;
+                        break;
+                    }
+                }
+                
+                if (processed) {
+                    SmartHub.UIUpdater.updateAllUIs();
+                } else {
+                    this.showStatus("Sorry, I don't understand that command.", 4000, false);
+                }
+            }
         }
-
-        // make sure icons render
-        if (window.lucide) lucide.createIcons();
-    });
+    };
     </script>
 </body>
 </html>
-
