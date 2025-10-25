@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        /* Base styles */
+        input[type="range"] { 
+            -webkit-appearance: none; 
+            appearance: none; 
+            width: 100%; 
+            height: 8px; 
+            background-color: #374151;
+            border-radius: 8px;
+            outline: none; 
+            transition: all 0.2s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb { 
+            -webkit-appearance: none; 
+            appearance: none; 
+            width: 20px; 
+            height: 20px; 
+            background-color: white;
+            border-radius: 50%;
+            border: 3px solid #3b82f6;
+            cursor: pointer; 
+            margin-top: -6px;
+            transition: all 0.2s ease;
+        }
+        
+        input[type="range"]::-moz-range-thumb { 
+            width: 20px; 
+            height: 20px; 
+            background-color: white;
+            border-radius: 50%;
+            border: 3px solid #3b82f6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"].color-slider {
+            background: linear-gradient(to right, 
+                #ff0000,  /* Red */
+                #ff8000,  /* Orange */
+                #ffff00,  /* Yellow */
+                #00ff00,  /* Green */
+                #00ffff,  /* Cyan */
+                #0000ff,  /* Blue */
+                #8000ff,  /* Purple */
+                #ff0080,  /* Pink */
+                #ff0000   /* Red */
+            );
+        }
+
+        input[type="range"].color-slider::-webkit-slider-thumb {
+            border-color: hsl(var(--light-hue, 200), 100%, 50%);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+        }
+
+        input[type="range"].color-slider::-webkit-slider-thumb:hover,
+        input[type="range"].color-slider::-webkit-slider-thumb:active {
+            transform: scale(1.2);
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+        }
+
+        input[type="range"].color-slider::-moz-range-thumb {
+            border-color: hsl(var(--light-hue, 200), 100%, 50%);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+        }
+
+        input[type="range"].color-slider::-moz-range-thumb:hover,
+        input[type="range"].color-slider::-moz-range-thumb:active {
+            transform: scale(1.2);
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .temp-button { 
+            width: 3rem; /* w-12 */
+            height: 3rem; /* h-12 */
+            border-radius: 9999px; /* rounded-full */
+            background-color: #374151; /* bg-gray-700 */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.875rem; /* text-3xl */
+            font-weight: bold;
+            transition: all 150ms;
+        }
+        .temp-button:active { 
+            background-color: #4B5563; /* bg-gray-600 */
+            transform: scale(0.95);
+        }
+
+        .scene-button { 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem; /* p-4 */
+            border-radius: 0.5rem; /* rounded-lg */
+            background-color: rgba(31, 41, 55, 0.7); /* bg-gray-800/70 */
+            border: 1px solid rgba(55, 65, 81, 0.5); /* border border-gray-700/50 */
+            backdrop-filter: blur(8px); /* backdrop-blur-lg */
+            color: #D1D5DB; /* text-gray-300 */
+            transition: all 200ms;
+        }
+        .scene-button:hover { 
+            background-color: rgba(55, 65, 81, 0.8); /* bg-gray-700/80 */
+            color: white;
+        }
+        .scene-button.active { 
+            background-color: rgba(37, 99, 235, 0.9); /* bg-blue-600/90 */
+            color: white;
+            border-color: #3B82F6; /* border-blue-500 */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+        }
+
+        /* Icon states */
+        .icon-on {
+            color: hsl(var(--light-hue, 60), 100%, 50%);
+            filter: drop-shadow(0 0 8px hsl(var(--light-hue, 60), 100%, 50%));
+        }
+        .icon-locked { 
+            color: #EF4444; /* text-red-500 */
+        }
+        .icon-unlocked { 
+            color: #10B981; /* text-green-500 */
+        }
+        
+        /* Speaker icon on state */
+        .speaker-icon-on { 
+            color: #3B82F6; /* text-blue-500 */
+        }
+        
+        #fan-icon { will-change: transform; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans antialiased min-h-screen flex flex-col" 
+      style="background-image: radial-gradient(circle at 10% 20%, rgb(30, 41, 59) 0%, rgb(17, 24, 39) 90%);">
+
+    <main class="flex-grow p-4 md:p-8">
+        <header class="mb-8 flex justify-between items-center max-w-7xl mx-auto">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-bold">Smart Hub</h1>
+                <p id="date-display" class="text-lg text-gray-400">Loading date...</p>
+            </div>
+            <div class="text-right">
+                <div id="time-display" class="text-3xl md:text-4xl font-bold">--:--:--</div>
+                <div id="ampm-display" class="text-lg text-gray-400">&nbsp;</div>
+            </div>
+        </header>
+
+        <section class="max-w-7xl mx-auto mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scenes</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button id="scene-good-morning" class="scene-button" data-scene="goodMorning">
+                    <i data-lucide="sunrise" class="mb-2 pointer-events-none"></i>
+                    <span class="pointer-events-none">Good Morning</span>
+                </button>
+                <button id="scene-movie-night" class="scene-button" data-scene="movieNight">
+                    <i data-lucide="film" class="mb-2 pointer-events-none"></i>
+                    <span class="pointer-events-none">Movie Night</span>
+                </button>
+                <button id="scene-good-night" class="scene-button" data-scene="goodNight">
+                    <i data-lucide="moon" class="mb-2 pointer-events-none"></i>
+                    <span class="pointer-events-none">Good Night</span>
+                </button>
+                 <button id="scene-all-off" class="scene-button" data-scene="allOff">
+                    <i data-lucide="power-off" class="mb-2 pointer-events-none"></i>
+                    <span class="pointer-events-none">All Off</span>
+                </button>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+            
+            <div id="light-card" class="bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6 transition-all duration-300 cursor-pointer" style="--light-hue: 200;">
+                <div class="flex justify-between items-center mb-4 pointer-events-none">
+                    <div class="flex items-center space-x-3">
+                        <i id="light-icon" data-lucide="lightbulb" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
+                        <h2 class="text-2xl font-semibold">Living Room Light</h2>
+                    </div>
+                </div>
+                <div id="light-controls" class="space-y-3 opacity-30 transition-opacity duration-300">
+                    <label for="light-intensity" class="block text-sm font-medium text-gray-400">Intensity</label>
+                    <input type="range" id="light-intensity" min="0" max="100" value="50" class="w-full">
+                    <div id="light-intensity-value" class="text-center text-lg font-medium">50%</div>
+                </div>
+                <div id="light-color-controls" class="space-y-3 mt-4 opacity-30 transition-opacity duration-300">
+                    <label for="light-color" class="block text-sm font-medium text-gray-400">Color</label>
+                    <input type="range" id="light-color" min="0" max="360" value="200" class="w-full color-slider">
+                </div>
+            </div>
+
+            <div id="fan-card" class="bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6 transition-all duration-300 cursor-pointer">
+                <div class="flex justify-between items-center mb-4 pointer-events-none">
+                    <div class="flex items-center space-x-3">
+                        <i id="fan-icon" data-lucide="fan" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
+                        <h2 class="text-2xl font-semibold">Bedroom Fan</h2>
+                    </div>
+                </div>
+                <div id="fan-controls" class="space-y-3 opacity-30 transition-opacity duration-300">
+                    <label for="fan-speed" class="block text-sm font-medium text-gray-400">Speed</label>
+                    <input type="range" id="fan-speed" min="0" max="5" value="2" class="w-full">
+                    <div id="fan-speed-value" class="text-center text-lg font-medium">Level 2</div>
+                </div>
+            </div>
+            
+            <div id="thermostat-card" class="bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6 transition-all duration-300">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center space-x-3">
+                        <i id="thermostat-icon" data-lucide="thermometer" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
+                        <h2 class="text-2xl font-semibold">Thermostat</h2>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <button id="temp-down" class="temp-button">-</button>
+                    <div class="text-center">
+                        <div id="temp-display" class="text-6xl font-bold">68&deg;</div>
+                        <div id="temp-mode-display" class="text-lg text-gray-400">Off</div>
+                    </div>
+                    <button id="temp-up" class="temp-button">+</button>
+                </div>
+                <div id="temp-mode-container" class="flex justify-around">
+                    <button id="temp-mode-heat" class="temp-mode-button p-2 rounded-lg" data-mode="Heat"><i data-lucide="flame" class="w-6 h-6 text-gray-500 pointer-events-none"></i></button>
+                    <button id="temp-mode-cool" class="temp-mode-button p-2 rounded-lg" data-mode="Cool"><i data-lucide="snowflake" class="w-6 h-6 text-gray-500 pointer-events-none"></i></button>
+                    <button id="temp-mode-off" class="temp-mode-button p-2 rounded-lg" data-mode="Off"><i data-lucide="power" class="w-6 h-6 text-gray-500 pointer-events-none"></i></button>
+                </div>
+            </div>
+            
+            <div id="lock-card" class="bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6 transition-all duration-300">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center space-x-3">
+                        <i id="lock-icon-locked" data-lucide="lock" class="w-7 h-7 icon-locked transition-all duration-300"></i>
+                        <i id="lock-icon-unlocked" data-lucide="lock-open" class="w-7 h-7 icon-unlocked transition-all duration-300 hidden"></i>
+                        <h2 class="text-2xl font-semibold">Front Door</h2>
+                    </div>
+                </div>
+                <button id="lock-toggle-button" class="w-full h-24 rounded-lg text-2xl font-semibold transition-all duration-200">
+                    Lock
+                </button>
+                <div id="lock-status" class="text-center text-lg text-gray-400 mt-3">Current Status: Unknown</div>
+            </div>
+
+            <div id="speaker-card" class="bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-2xl p-6 transition-all duration-300">
+                <div class="flex justify-between items-center mb-4 pointer-events-none">
+                    <div class="flex items-center space-x-3">
+                        <i id="speaker-icon" data-lucide="volume-2" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
+                        <h2 class="text-2xl font-semibold">Living Room Speaker</h2>
+                    </div>
+                </div>
+                <div id="speaker-controls" class="space-y-3">
+                    <label for="speaker-volume" class="block text-sm font-medium text-gray-400">Volume</label>
+                    <input type="range" id="speaker-volume" min="0" max="100" value="30" class="w-full">
+                    <div id="speaker-volume-value" class="text-center text-lg font-medium">30%</div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <div id="track-title" class="text-lg text-gray-300 mb-4 h-6 truncate">Paused</div>
+                    <div class="flex justify-center items-center space-x-4">
+                        <button id="prev-track" class="p-3 rounded-full bg-gray-700 hover:bg-gray-600 transition-all">
+                            <i data-lucide="skip-back" class="w-6 h-6 pointer-events-none"></i>
+                        </button>
+                        <button id="play-pause" class="p-4 rounded-full bg-blue-600 hover:bg-blue-700 transition-all transform scale-110">
+                            <i id="play-icon" data-lucide="play" class="w-7 h-7 pointer-events-none fill-current"></i>
+                            <i id="pause-icon" data-lucide="pause" class="w-7 h-7 pointer-events-none fill-current hidden"></i>
+                        </button>
+                        <button id="next-track" class="p-3 rounded-full bg-gray-700 hover:bg-gray-600 transition-all">
+                            <i data-lucide="skip-forward" class="w-6 h-6 pointer-events-none"></i>
+                        </button>
+                    </div>
+                </div>
+                </div>
+            
+            <div class="bg-gray-800/70 backdrop-blur-lg border border-dashed border-gray-700/50 rounded-xl shadow-2xl p-6 flex items-center justify-center">
+                <div class="text-center text-gray-600">
+                    <i data-lucide="plus-circle" class="w-12 h-12 mb-2"></i>
+                    <p>Add New Device</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="sticky bottom-0 bg-gray-900/80 backdrop-blur-md p-4 w-full border-t border-gray-700/50">
+        <div class="max-w-3xl mx-auto flex flex-col items-center space-y-3">
+            <div id="status-message" class="text-gray-400 text-sm h-5 transition-all">Tap mic to speak</div>
+
+            <button id="mic-button" class="bg-blue-600 hover:bg-blue-700 text-white p-5 rounded-full shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500/50">
+                <i id="mic-icon" data-lucide="mic" class="w-7 h-7"></i>
+                <i id="mic-active-icon" data-lucide="radio" class="w-7 h-7 hidden"></i>
+            </button>
+            <p id="transcript-display" class="text-center text-gray-300 min-h-[2.5em] text-lg px-4"></p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Application State (Unchanged) ---
+            const appState = {
+                light: {
+                    isOn: false,
+                    intensity: 50,
+                    hue: 200
+                },
+                fan: {
+                    isOn: false,
+                    speed: 2
+                },
+                thermostat: {
+                    temperature: 68,
+                    mode: 'Off'
+                },
+                lock: {
+                    isLocked: true
+                },
+                speaker: {
+                    isPlaying: false,
+                    volume: 30
+                },
+                activeScene: null,
+                statusTimer: null
+            };
+            
+            // (Unchanged)
+            const colorMap = {
+                'red': 0, 'orange': 30, 'yellow': 60, 'green': 120,
+                'cyan': 180, 'blue': 240, 'purple': 270, 'magenta': 300, 'pink': 330
+            };
+
+            // --- Cache DOM Elements (MODIFIED) ---
+            const UI = {
+                timeDisplay: document.getElementById('time-display'),
+                ampmDisplay: document.getElementById('ampm-display'),
+                dateDisplay: document.getElementById('date-display'),
+                
+                light: {
+                    card: document.getElementById('light-card'),
+                    controls: document.getElementById('light-controls'),
+                    intensity: document.getElementById('light-intensity'),
+                    value: document.getElementById('light-intensity-value'),
+                    icon: document.getElementById('light-icon'),
+                    colorControls: document.getElementById('light-color-controls'),
+                    colorSlider: document.getElementById('light-color')
+                },
+                fan: {
+                    card: document.getElementById('fan-card'),
+                    controls: document.getElementById('fan-controls'),
+                    speed: document.getElementById('fan-speed'),
+                    value: document.getElementById('fan-speed-value'),
+                    icon: document.getElementById('fan-icon')
+                },
+                thermostat: {
+                    card: document.getElementById('thermostat-card'),
+                    display: document.getElementById('temp-display'),
+                    modeDisplay: document.getElementById('temp-mode-display'),
+                    icon: document.getElementById('thermostat-icon'),
+                    tempUp: document.getElementById('temp-up'),
+                    tempDown: document.getElementById('temp-down'),
+                    modeContainer: document.getElementById('temp-mode-container'),
+                    modeButtons: document.querySelectorAll('.temp-mode-button')
+                },
+                lock: {
+                    card: document.getElementById('lock-card'),
+                    iconLocked: document.getElementById('lock-icon-locked'),
+                    iconUnlocked: document.getElementById('lock-icon-unlocked'),
+                    button: document.getElementById('lock-toggle-button'),
+                    status: document.getElementById('lock-status')
+                },
+                // UPDATED speaker object from your snippet
+                speaker: {
+                    card: document.getElementById('speaker-card'),
+                    icon: document.getElementById('speaker-icon'),
+                    volume: document.getElementById('speaker-volume'),
+                    value: document.getElementById('speaker-volume-value'),
+                    playButton: document.getElementById('play-pause'),
+                    playIcon: document.getElementById('play-icon'),
+                    pauseIcon: document.getElementById('pause-icon'),
+                    prevButton: document.getElementById('prev-track'),
+                    nextButton: document.getElementById('next-track'),
+                    trackTitle: document.getElementById('track-title')
+                },
+                scenes: {
+                    goodMorning: document.getElementById('scene-good-morning'),
+                    movieNight: document.getElementById('scene-movie-night'),
+                    goodNight: document.getElementById('scene-good-night'),
+                    allOff: document.getElementById('scene-all-off'),
+                },
+                voice: {
+                    micButton: document.getElementById('mic-button'),
+                    micIcon: document.getElementById('mic-icon'),
+                    micActiveIcon: document.getElementById('mic-active-icon'),
+                    statusMessage: document.getElementById('status-message'),
+                    transcriptDisplay: document.getElementById('transcript-display')
+                }
+            };
+
+            // --- Clock Function (Unchanged) ---
+            function updateClock() {
+                const now = new Date();
+                UI.dateDisplay.textContent = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                let hours = now.getHours();
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                const seconds = now.getSeconds().toString().padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                UI.timeDisplay.textContent = `${hours.toString().padStart(2, ' ')}:${minutes}:${seconds}`;
+                UI.ampmDisplay.textContent = ampm;
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+            
+            // --- Helper: Update Slider Gradient (Unchanged) ---
+            function updateSliderBackground(slider, color = '#3b82f6') {
+                const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+                slider.style.background = `linear-gradient(to right, ${color} ${value}%, #374151 ${value}%)`;
+            }
+            
+            // --- Helper: Speech Synthesis ---
+            function speak(text) {
+                if (!('speechSynthesis' in window)) return;
+                try {
+                    // Stop any currently speaking utterances to avoid overlap
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    // tweak these if you want a different voice/pitch/rate
+                    // utterance.rate = 1;
+                    // utterance.pitch = 1;
+                    // utterance.volume = 1;
+                    window.speechSynthesis.speak(utterance);
+                } catch (err) {
+                    console.warn('Speech synthesis failed', err);
+                }
+            }
+
+            // --- Helper: Show Status Message (with optional voice) ---
+            function showStatus(message, duration = 4000, speakMessage = true) {
+                UI.voice.statusMessage.textContent = message;
+                if (appState.statusTimer) {
+                    clearTimeout(appState.statusTimer);
+                }
+                appState.statusTimer = setTimeout(() => {
+                    if (UI.voice.statusMessage.textContent === message) {
+                        UI.voice.statusMessage.textContent = "Tap mic to speak";
+                    }
+                }, duration);
+                if (speakMessage) speak(message);
+            }
+
+            // --- UI Update Functions ---
+
+            // updateLightUI (Unchanged)
+            function updateLightUI() {
+                const { isOn, intensity, hue } = appState.light;
+                
+                UI.light.card.style.setProperty('--light-hue', hue);
+                UI.light.intensity.value = intensity;
+                UI.light.value.textContent = `${intensity}%`;
+                UI.light.colorSlider.value = hue;
+                
+                updateSliderBackground(UI.light.intensity, `hsl(${hue}, 100%, 50%)`);
+
+                if (isOn) {
+                    UI.light.card.classList.add('border-blue-500');
+                    UI.light.controls.classList.remove('opacity-30');
+                    UI.light.intensity.disabled = false;
+                    UI.light.icon.classList.add('icon-on');
+                    UI.light.colorControls.classList.remove('opacity-30');
+                    UI.light.colorSlider.disabled = false;
+                } else {
+                    UI.light.card.classList.remove('border-blue-500');
+                    UI.light.controls.classList.add('opacity-30');
+                    UI.light.intensity.disabled = true;
+                    UI.light.icon.classList.remove('icon-on');
+                    UI.light.colorControls.classList.add('opacity-30');
+                    UI.light.colorSlider.disabled = true;
+                }
+            }
+
+            // updateFanUI (Unchanged)
+            function updateFanUI() {
+                const { isOn, speed } = appState.fan;
+                UI.fan.speed.value = speed;
+                UI.fan.value.textContent = `Level ${speed}`;
+                updateSliderBackground(UI.fan.speed);
+
+                if (isOn) {
+                    UI.fan.card.classList.add('border-blue-500');
+                    UI.fan.controls.classList.remove('opacity-30');
+                    UI.fan.speed.disabled = false;
+                    UI.fan.icon.classList.add('animate-spin');
+                } else {
+                    UI.fan.card.classList.remove('border-blue-500');
+                    UI.fan.controls.classList.add('opacity-30');
+                    UI.fan.speed.disabled = true;
+                    UI.fan.icon.classList.remove('animate-spin');
+                }
+            }
+            
+            // updateThermostatUI (Unchanged)
+            function updateThermostatUI() {
+                const { temperature, mode } = appState.thermostat;
+                UI.thermostat.display.textContent = `${temperature}\u00B0`;
+                UI.thermostat.modeDisplay.textContent = `Mode: ${mode}`;
+                UI.thermostat.icon.classList.remove('text-red-500', 'text-blue-500');
+                UI.thermostat.card.classList.remove('border-red-500', 'border-blue-500');
+                
+                UI.thermostat.modeButtons.forEach(btn => {
+                    btn.classList.remove('bg-gray-600', 'text-white');
+                    const icon = btn.querySelector('i');
+                    icon.classList.add('text-gray-500');
+                    icon.classList.remove('text-red-500', 'text-blue-500', 'text-white');
+                });
+                
+                let activeBtn;
+                if (mode === 'Heat') {
+                    UI.thermostat.icon.classList.add('text-red-500');
+                    UI.thermostat.card.classList.add('border-red-500');
+                    activeBtn = document.getElementById('temp-mode-heat');
+                    if (activeBtn) activeBtn.querySelector('i').classList.add('text-red-500');
+                } else if (mode === 'Cool') {
+                    UI.thermostat.icon.classList.add('text-blue-500');
+                    UI.thermostat.card.classList.add('border-blue-500');
+                    activeBtn = document.getElementById('temp-mode-cool');
+                    if (activeBtn) activeBtn.querySelector('i').classList.add('text-blue-500');
+                } else { // Off
+                    activeBtn = document.getElementById('temp-mode-off');
+                    if (activeBtn) activeBtn.querySelector('i').classList.add('text-white');
+                }
+                if (activeBtn) activeBtn.classList.add('bg-gray-600');
+            }
+            
+            // updateLockUI (Unchanged)
+            function updateLockUI() {
+                const { isLocked } = appState.lock;
+                if (isLocked) {
+                    UI.lock.iconLocked.classList.remove('hidden');
+                    UI.lock.iconUnlocked.classList.add('hidden');
+                    UI.lock.button.textContent = 'Unlock';
+                    UI.lock.button.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                    UI.lock.button.classList.remove('bg-green-600', 'hover:bg-green-500');
+                    UI.lock.status.textContent = 'Status: Locked';
+                    UI.lock.card.classList.remove('border-green-500');
+                } else {
+                    UI.lock.iconLocked.classList.add('hidden');
+                    UI.lock.iconUnlocked.classList.remove('hidden');
+                    UI.lock.button.textContent = 'Lock';
+                    UI.lock.button.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+                    UI.lock.button.classList.add('bg-green-600', 'hover:bg-green-500');
+                    UI.lock.status.textContent = 'Status: Unlocked';
+                    UI.lock.card.classList.add('border-green-500');
+                }
+            }
+            
+            // REPLACED updateSpeakerUI with your snippet
+            function updateSpeakerUI() {
+                const { isPlaying, volume } = appState.speaker;
+                UI.speaker.volume.value = volume;
+                UI.speaker.value.textContent = `${volume}%`;
+                updateSliderBackground(UI.speaker.volume, '#3b82f6');
+
+                if (isPlaying) {
+                    UI.speaker.playIcon.classList.add('hidden');
+                    UI.speaker.pauseIcon.classList.remove('hidden');
+                    UI.speaker.icon.classList.add('text-blue-500');
+                    UI.speaker.card.classList.add('border-blue-500');
+                    UI.speaker.trackTitle.textContent = "Playing: Smooth Jazz 🎷";
+                } else {
+                    UI.speaker.playIcon.classList.remove('hidden');
+                    UI.speaker.pauseIcon.classList.add('hidden');
+                    UI.speaker.icon.classList.remove('text-blue-500');
+                    UI.speaker.card.classList.remove('border-blue-500');
+                    UI.speaker.trackTitle.textContent = "Paused";
+                }
+            }
+            
+            // updateActiveScene (Unchanged)
+            function updateActiveScene() {
+                Object.values(UI.scenes).forEach(button => {
+                    button.classList.remove('active');
+                });
+                const activeSceneKey = appState.activeScene;
+                if (activeSceneKey && UI.scenes[activeSceneKey]) {
+                    UI.scenes[activeSceneKey].classList.add('active');
+                }
+            }
+
+            // --- Manual Control Event Listeners (MODIFIED) ---
+
+            // Light (Unchanged)
+            UI.light.card.addEventListener('click', (e) => {
+                if (e.target === UI.light.intensity || e.target === UI.light.colorSlider) {
+                    return;
+                }
+                appState.light.isOn = !appState.light.isOn;
+                updateLightUI();
+            });
+            UI.light.intensity.addEventListener('input', (e) => {
+                appState.light.intensity = e.target.value;
+                if (appState.light.intensity > 0) appState.light.isOn = true;
+                updateLightUI();
+            });
+            UI.light.colorSlider.addEventListener('input', (e) => {
+                appState.light.hue = e.target.value;
+                if (!appState.light.isOn) appState.light.isOn = true;
+                // Update the color preview position
+                const position = ((e.target.value - e.target.min) / (e.target.max - e.target.min)) * 100;
+                e.target.style.setProperty('--thumb-position', `${position}%`);
+                updateLightUI();
+            });
+
+            // Initialize color preview position
+            UI.light.colorSlider.style.setProperty('--thumb-position', `${((UI.light.colorSlider.value - UI.light.colorSlider.min) / (UI.light.colorSlider.max - UI.light.colorSlider.min)) * 100}%`);
+
+            // Fan (Unchanged)
+            UI.fan.card.addEventListener('click', (e) => {
+                if (e.target === UI.fan.speed) {
+                    return;
+                }
+                appState.fan.isOn = !appState.fan.isOn;
+                updateFanUI();
+            });
+            UI.fan.speed.addEventListener('input', (e) => {
+                appState.fan.speed = e.target.value;
+                if (appState.fan.speed > 0) appState.fan.isOn = true;
+                updateFanUI();
+            });
+            
+            // Thermostat Listeners (Unchanged)
+            UI.thermostat.tempUp.addEventListener('click', () => { 
+                appState.thermostat.temperature++; 
+                updateThermostatUI(); 
+            });
+            UI.thermostat.tempDown.addEventListener('click', () => { 
+                appState.thermostat.temperature--; 
+                updateThermostatUI(); 
+            });
+            UI.thermostat.modeContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('.temp-mode-button');
+                if (button && button.dataset.mode) {
+                    appState.thermostat.mode = button.dataset.mode;
+                    updateThermostatUI();
+                }
+            });
+
+            // Lock Listener (Unchanged)
+            UI.lock.button.addEventListener('click', () => {
+                appState.lock.isLocked = !appState.lock.isLocked;
+                updateLockUI();
+            });
+            
+            // --- MODIFIED: Speaker Listeners ---
+            
+            // Card click listener REMOVED
+
+            // Volume slider listener (Unchanged)
+            UI.speaker.volume.addEventListener('input', (e) => {
+                appState.speaker.volume = e.target.value;
+                updateSpeakerUI();
+            });
+
+            // ADDED Listeners from your snippet
+            UI.speaker.playButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                appState.speaker.isPlaying = !appState.speaker.isPlaying;
+                updateSpeakerUI();
+            });
+
+            UI.speaker.nextButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                UI.speaker.trackTitle.textContent = "Playing: Next Song 🎶";
+                appState.speaker.isPlaying = true; // Assume play on skip
+                updateSpeakerUI();
+                showStatus("Skipped to next track");
+            });
+
+            UI.speaker.prevButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                UI.speaker.trackTitle.textContent = "Playing: Previous Track 🎧";
+                appState.speaker.isPlaying = true; // Assume play on skip
+                updateSpeakerUI();
+                showStatus("Went to previous track");
+            });
+            
+            // --- Scene Event Listeners (Unchanged) ---
+            function runScene(sceneName) {
+                appState.activeScene = sceneName;
+                switch (sceneName) {
+                    case 'goodMorning':
+                        appState.light = { isOn: true, intensity: 70, hue: 50 };
+                        appState.fan = { isOn: false, speed: 0 };
+                        appState.thermostat = { temperature: 68, mode: 'Heat' };
+                        appState.lock = { isLocked: false };
+                        showStatus("Activated 'Good Morning' scene.");
+                        break;
+                    case 'movieNight':
+                        appState.light = { isOn: true, intensity: 20, hue: 240 };
+                        appState.fan = { isOn: true, speed: 1 };
+                        appState.speaker = { isPlaying: true, volume: 40 };
+                        appState.lock = { isLocked: true };
+                        showStatus("Activated 'Movie Night' scene.");
+                        break;
+                    case 'goodNight':
+                        appState.light = { isOn: false, intensity: 0, hue: appState.light.hue };
+                        appState.fan = { isOn: false, speed: 0 };
+                        appState.speaker = { isPlaying: false, volume: 0 };
+                        appState.lock = { isLocked: true };
+                        appState.thermostat = { temperature: 65, mode: 'Heat' };
+                        showStatus("Activated 'Good Night' scene.");
+                        break;
+                    case 'allOff':
+                        appState.light = { isOn: false, intensity: 0, hue: appState.light.hue };
+                        appState.fan = { isOn: false, speed: 0 };
+                        appState.speaker = { isPlaying: false, volume: 0 };
+                        appState.thermostat.mode = 'Off';
+                        showStatus("Turned all devices off.");
+                        break;
+                }
+                updateAllUIs();
+            }
+            
+            Object.values(UI.scenes).forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const sceneName = e.currentTarget.dataset.scene;
+                    runScene(sceneName);
+                });
+            });
+
+            function updateAllUIs() {
+                updateLightUI();
+                updateFanUI();
+                updateThermostatUI();
+                updateLockUI();
+                updateSpeakerUI();
+                updateActiveScene();
+            }
+
+            // --- Initialize All UIs on Load ---
+            updateAllUIs();
+            if (window.lucide) {
+                lucide.createIcons(); // This will now create the new media icons
+            }
+            
+            // --- Voice Command Logic (Web Speech API) ---
+            // This entire section is unchanged
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                showStatus("Speech recognition not supported by this browser.");
+                UI.voice.micButton.disabled = true;
+                UI.voice.micButton.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            UI.voice.micButton.addEventListener('click', () => {
+                recognition.start();
+                appState.activeScene = null;
+                updateActiveScene();
+            });
+            
+            recognition.onstart = () => {
+                UI.voice.statusMessage.textContent = "Listening...";
+                if (appState.statusTimer) clearTimeout(appState.statusTimer);
+                UI.voice.transcriptDisplay.textContent = "";
+                UI.voice.micButton.disabled = true;
+                UI.voice.micButton.classList.add('animate-pulse', 'bg-red-600');
+                UI.voice.micIcon.classList.add('hidden');
+                UI.voice.micActiveIcon.classList.remove('hidden');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.toLowerCase().trim();
+                UI.voice.transcriptDisplay.textContent = `"${transcript}"`;
+                processCommand(transcript);
+            };
+
+            recognition.onspeechend = () => recognition.stop();
+
+            recognition.onerror = (event) => {
+                showStatus(event.error === 'no-speech' ? "Didn't hear anything." : `Error: ${event.error}`);
+            };
+
+            recognition.onend = () => {
+                UI.voice.micButton.disabled = false;
+                UI.voice.micButton.classList.remove('animate-pulse', 'bg-red-600');
+                UI.voice.micIcon.classList.remove('hidden');
+                UI.voice.micActiveIcon.classList.add('hidden');
+            };
+
+            // --- Command Processing (Unchanged) ---
+            function processCommand(command) {
+                let processed = false;
+                const getNumber = (cmd) => cmd.match(/(\d+)/) ? parseInt(cmd.match(/(\d+)/)[1], 10) : null;
+
+                // Scenes
+                if (command.includes('good morning')) { runScene('goodMorning'); processed = true; }
+                else if (command.includes('movie night')) { runScene('movieNight'); processed = true; }
+                else if (command.includes('good night')) { runScene('goodNight'); processed = true; }
+                else if (command.includes('turn everything off') || command.includes('all off')) { runScene('allOff'); processed = true; }
+
+                // Light
+                else if (command.includes('light on') || command.includes('turn on light')) {
+                    appState.light.isOn = true;
+                    showStatus("OK, turning on the light.");
+                    processed = true;
+                } else if (command.includes('light off') || command.includes('turn off light')) {
+                    appState.light.isOn = false;
+                    showStatus("OK, turning off the light.");
+                    processed = true;
+                } 
+                else if (command.includes('set light to') || command.includes('change light to') || command.includes('set light intensity')) {
+                    const colorWord = Object.keys(colorMap).find(color => command.includes(color));
+                    const intensity = getNumber(command);
+
+                    if (colorWord) {
+                        appState.light.hue = colorMap[colorWord];
+                        if (!appState.light.isOn) appState.light.isOn = true;
+                        showStatus(`Set light color to ${colorWord}.`);
+                        processed = true;
+                    } else if (intensity !== null && intensity >= 0 && intensity <= 100) {
+                        appState.light = { ...appState.light, isOn: true, intensity: intensity };
+                        showStatus(`Set light intensity to ${intensity}%.`);
+                        processed = true;
+                    } else {
+                        showStatus("Sorry, I don't recognize that color or intensity.");
+                        processed = true;
+                    }
+                }
+
+                // Fan
+                else if (command.includes('fan on') || command.includes('turn on fan')) {
+                    appState.fan.isOn = true;
+                    showStatus("OK, turning on the fan.");
+                    processed = true;
+                } else if (command.includes('fan off') || command.includes('turn off fan')) {
+                    appState.fan.isOn = false;
+                    showStatus("OK, turning off the fan.");
+                    processed = true;
+                } else if (command.includes('set fan speed to') || command.includes('set fan to')) {
+                    const speed = getNumber(command);
+                    if (speed !== null && speed >= 0 && speed <= 5) {
+                        appState.fan = { isOn: true, speed: speed };
+                        showStatus(`Set fan speed to level ${speed}.`);
+                    } else { showStatus("Sorry, I didn't catch the fan speed."); }
+                    processed = true;
+                }
+                
+                // Thermostat
+                else if (command.includes('set temperature to') || command.includes('set thermostat to')) {
+                    const temp = getNumber(command);
+                    if (temp) {
+                        appState.thermostat.temperature = temp;
+                        showStatus(`Set temperature to ${temp} degrees.`);
+                    } else { showStatus("Didn't catch the temperature."); }
+                    processed = true;
+                } else if (command.includes('turn on heat') || command.includes('set to heat')) {
+                    appState.thermostat.mode = 'Heat';
+                    showStatus("OK, heat is on.");
+                    processed = true;
+                } else if (command.includes('turn on ac') || command.includes('set to cool')) {
+                    appState.thermostat.mode = 'Cool';
+                    showStatus("OK, AC is on.");
+                    processed = true;
+                } else if (command.includes('turn off thermostat') || command.includes('thermostat off')) {
+                    appState.thermostat.mode = 'Off';
+                    showStatus("OK, thermostat is off.");
+                    processed = true;
+                }
+                
+                // Lock
+                else if (command.includes('lock the door') || command.includes('lock door')) {
+                    appState.lock.isLocked = true;
+                    showStatus("OK, front door is locked.");
+                    processed = true;
+                } else if (command.includes('unlock the door') || command.includes('unlock door')) {
+                    appState.lock.isLocked = false;
+                    showStatus("OK, front door is unlocked.");
+                    processed = true;
+                }
+                
+                // Speaker
+                else if (command.includes('play music') || command.includes('play speaker') || command.includes('turn on speaker') || command.includes('play')) {
+                    appState.speaker.isPlaying = true;
+                    showStatus("OK, playing music.");
+                    processed = true;
+                } else if (command.includes('stop music') || command.includes('pause music') || command.includes('turn off speaker') || command.includes('pause')) {
+                    appState.speaker.isPlaying = false;
+                    showStatus("OK, stopping music.");
+                    processed = true;
+                } else if (command.includes('next track') || command.includes('next song')) {
+                    UI.speaker.nextButton.click(); // Simulate button click
+                    processed = true;
+                } else if (command.includes('previous track') || command.includes('last song')) {
+                    UI.speaker.prevButton.click(); // Simulate button click
+                    processed = true;
+                } else if (command.includes('set volume to')) {
+                    const volume = getNumber(command);
+                     if (volume !== null && volume >= 0 && volume <= 100) {
+                        appState.speaker.volume = volume;
+                        showStatus(`Set volume to ${volume}%.`);
+                    } else { showStatus("Sorry, I didn't catch the volume level."); }
+                    processed = true;
+                }
+
+                // No Command Matched
+                if (!processed) {
+                    showStatus("Sorry, I don't understand that command.");
+                }
+
+                updateAllUIs();
+            }
+        });
+    </script>
+</body>
+</html>
