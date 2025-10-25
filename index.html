@@ -1279,6 +1279,35 @@
             }
         }
     };
+
+       function updateClockAndDate() {
+        const now = new Date();
+
+        const dateStr = now.toLocaleDateString(undefined, {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
+
+        const timeStr = now.toLocaleTimeString(undefined, { hour12: true });
+
+        const dateEl = document.getElementById("date-display");
+        const timeEl = document.getElementById("time-display");
+        const ampmEl = document.getElementById("ampm-display");
+
+        if (dateEl) dateEl.textContent = dateStr;
+
+        if (timeEl && ampmEl) {
+          const [time, ampm] = timeStr.split(" ");
+          timeEl.textContent = time;
+          ampmEl.textContent = ampm || "";
+        }
+      }
+
+      updateClockAndDate();
+      setInterval(updateClockAndDate, 1000);
     </script>
 </body>
 </html>
+
