@@ -333,6 +333,47 @@
                 'cyan': 180, 'blue': 240, 'purple': 270, 'magenta': 300, 'pink': 330
             };
 
+            // --- NEW: Word-to-Number Mapping and parser ---
+            const wordToNumberMap = {
+                'zero': 0, 'oh': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+                'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11,
+                'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15,
+                'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19,
+                'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60,
+                'seventy': 70, 'eighty': 80, 'ninety': 90, 'hundred': 100, 'a': 1
+            };
+
+            function parseNumber(command) {
+                if (!command || typeof command !== 'string') return null;
+                // 1) digits first
+                const digitMatch = command.match(/(\d+)/);
+                if (digitMatch) return parseInt(digitMatch[1], 10);
+
+                // 2) word numbers: accumulate values from tokens
+                const tokens = command.toLowerCase().split(/[^a-z]+/).filter(Boolean);
+                let total = 0;
+                let current = 0;
+                let found = false;
+                for (const t of tokens) {
+                    if (!(t in wordToNumberMap)) {
+                        // when reaching non-number word, flush current
+                        if (current > 0) {
+                            total += current; current = 0;
+                        }
+                        continue;
+                    }
+                    found = true;
+                    const val = wordToNumberMap[t];
+                    if (val === 100) {
+                        current = (current || 1) * 100;
+                    } else {
+                        current += val;
+                    }
+                }
+                total += current;
+                return found ? total : null;
+            }
+
             // --- Cache DOM Elements (MODIFIED) ---
             const UI = {
                 timeDisplay: document.getElementById('time-display'),
@@ -397,6 +438,70 @@
                     micActiveIcon: document.getElementById('mic-active-icon'),
                     statusMessage: document.getElementById('status-message'),
                     transcriptDisplay: document.getElementById('transcript-display')
+                }
+            };
+
+            // --- Audio controller (lightweight demo playback using Web Audio) ---
+            const audioController = {
+                ctx: null,
+                gain: null,
+                osc: null,
+                volume: appState.speaker.volume / 100,
+                trackIndex: 0,
+                tracks: [220, 277, 330, 392], // simple frequencies for demo tracks
+                init() {
+                    if (this.ctx) return;
+                    try {
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        this.ctx = new AudioCtx();
+                        this.gain = this.ctx.createGain();
+                        this.gain.gain.value = this.volume;
+                        this.gain.connect(this.ctx.destination);
+                    } catch (err) {
+                        console.warn('Web Audio not supported', err);
+                        this.ctx = null;
+                    }
+                },
+                play() {
+                    if (!this.ctx) this.init();
+                    if (!this.ctx) return; // can't play
+                    // resume context if suspended (autoplay policies)
+                    if (this.ctx.state === 'suspended') {
+                        this.ctx.resume().catch(() => {
+                            showStatus('Audio blocked by browser. Tap play to enable sound.');
+                        });
+                    }
+                    if (this.osc) return; // already playing
+                    this.osc = this.ctx.createOscillator();
+                    this.osc.type = 'sine';
+                    this.osc.frequency.value = this.tracks[this.trackIndex % this.tracks.length];
+                    this.osc.connect(this.gain);
+                    this.osc.start();
+                },
+                pause() {
+                    if (!this.osc) return;
+                    try {
+                        this.osc.stop();
+                    } catch (e) {}
+                    this.osc.disconnect();
+                    this.osc = null;
+                },
+                next() {
+                    this.trackIndex = (this.trackIndex + 1) % this.tracks.length;
+                    if (this.osc) {
+                        // change frequency smoothly
+                        this.osc.frequency.setTargetAtTime(this.tracks[this.trackIndex], this.ctx.currentTime, 0.05);
+                    }
+                },
+                prev() {
+                    this.trackIndex = (this.trackIndex - 1 + this.tracks.length) % this.tracks.length;
+                    if (this.osc) {
+                        this.osc.frequency.setTargetAtTime(this.tracks[this.trackIndex], this.ctx.currentTime, 0.05);
+                    }
+                },
+                setVolume(v) {
+                    this.volume = v;
+                    if (this.gain) this.gain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.01);
                 }
             };
 
@@ -566,18 +671,26 @@
                 UI.speaker.value.textContent = `${volume}%`;
                 updateSliderBackground(UI.speaker.volume, '#3b82f6');
 
+                // always update audioController volume so UI changes take effect
+                try { audioController.setVolume(volume / 100); } catch (e) {}
+
                 if (isPlaying) {
                     UI.speaker.playIcon.classList.add('hidden');
                     UI.speaker.pauseIcon.classList.remove('hidden');
                     UI.speaker.icon.classList.add('text-blue-500');
                     UI.speaker.card.classList.add('border-blue-500');
                     UI.speaker.trackTitle.textContent = "Playing: Smooth Jazz 🎷";
+                    // start audio playback (demo)
+                    audioController.setVolume(volume / 100);
+                    audioController.play();
                 } else {
                     UI.speaker.playIcon.classList.remove('hidden');
                     UI.speaker.pauseIcon.classList.add('hidden');
                     UI.speaker.icon.classList.remove('text-blue-500');
                     UI.speaker.card.classList.remove('border-blue-500');
                     UI.speaker.trackTitle.textContent = "Paused";
+                    // stop audio playback
+                    audioController.pause();
                 }
             }
             
@@ -678,6 +791,8 @@
                 UI.speaker.trackTitle.textContent = "Playing: Next Song 🎶";
                 appState.speaker.isPlaying = true; // Assume play on skip
                 updateSpeakerUI();
+                // advance demo track
+                audioController.next();
                 showStatus("Skipped to next track");
             });
 
@@ -686,6 +801,7 @@
                 UI.speaker.trackTitle.textContent = "Playing: Previous Track 🎧";
                 appState.speaker.isPlaying = true; // Assume play on skip
                 updateSpeakerUI();
+                audioController.prev();
                 showStatus("Went to previous track");
             });
             
@@ -803,7 +919,8 @@
             // --- Command Processing (Unchanged) ---
             function processCommand(command) {
                 let processed = false;
-                const getNumber = (cmd) => cmd.match(/(\d+)/) ? parseInt(cmd.match(/(\d+)/)[1], 10) : null;
+                // use parseNumber which supports digits and number-words
+                // const getNumber = (cmd) => cmd.match(/(\d+)/) ? parseInt(cmd.match(/(\d+)/)[1], 10) : null;
 
                 // Scenes
                 if (command.includes('good morning')) { runScene('goodMorning'); processed = true; }
@@ -823,7 +940,7 @@
                 } 
                 else if (command.includes('set light to') || command.includes('change light to') || command.includes('set light intensity')) {
                     const colorWord = Object.keys(colorMap).find(color => command.includes(color));
-                    const intensity = getNumber(command);
+                    const intensity = parseNumber(command);
 
                     if (colorWord) {
                         appState.light.hue = colorMap[colorWord];
@@ -850,7 +967,7 @@
                     showStatus("OK, turning off the fan.");
                     processed = true;
                 } else if (command.includes('set fan speed to') || command.includes('set fan to')) {
-                    const speed = getNumber(command);
+                    const speed = parseNumber(command);
                     if (speed !== null && speed >= 0 && speed <= 5) {
                         appState.fan = { isOn: true, speed: speed };
                         showStatus(`Set fan speed to level ${speed}.`);
@@ -860,7 +977,7 @@
                 
                 // Thermostat
                 else if (command.includes('set temperature to') || command.includes('set thermostat to')) {
-                    const temp = getNumber(command);
+                    const temp = parseNumber(command);
                     if (temp) {
                         appState.thermostat.temperature = temp;
                         showStatus(`Set temperature to ${temp} degrees.`);
@@ -907,7 +1024,7 @@
                     UI.speaker.prevButton.click(); // Simulate button click
                     processed = true;
                 } else if (command.includes('set volume to')) {
-                    const volume = getNumber(command);
+                    const volume = parseNumber(command);
                      if (volume !== null && volume >= 0 && volume <= 100) {
                         appState.speaker.volume = volume;
                         showStatus(`Set volume to ${volume}%.`);
