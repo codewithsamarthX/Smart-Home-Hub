@@ -116,13 +116,14 @@
             
             <div class="text-right flex items-center gap-4">
                 <div class="flex gap-3 justify-end items-center">
-                    <div id="weather-icon-container" class="w-10 h-10">
+                    <div id="weather-icon-container" class="flex items-center gap-2">
                         <i data-lucide="cloud-sun" class="w-10 h-10 text-yellow-400"></i>
-                    </div>
-                    <div>
-                        <div id="weather-temp" class="text-2xl font-bold">75&deg;F</div>
-                        <div id="weather-desc" class="text-sm text-gray-400">Partly Cloudy</div>
-                    </div>
+                        <i data-lucide="thermometer" class="w-8 h-8 text-gray-400"></i>
+                        </div>
+                        <div>
+                            <div id="weather-temp" class="text-2xl font-bold">75&deg;F</div>
+                            <div id="weather-desc" class="text-sm text-gray-400">Partly Cloudy</div>
+                        </div>
                 </div>
                 <div>
                     <div id="time-display" class="text-3xl md:text-4xl font-bold">--:--:--</div>
@@ -770,42 +771,36 @@
                     UI.ampmDisplay.textContent = ampm;
                 }
                 
-                // This updates the dynamic background
-                let newTheme = 'theme-day'; // Default
-                if (hours >= 5 && hours < 12) newTheme = 'theme-morning';
-                else if (hours >= 12 && hours < 18) newTheme = 'theme-day';
-                else if (hours >= 18 && hours < 22) newTheme = 'theme-evening';
-                else newTheme = 'theme-night';
-
-                if (newTheme !== SmartHub.state.currentTheme && UI.body) {
-                    if (SmartHub.state.currentTheme) UI.body.classList.remove(SmartHub.state.currentTheme);
-                    UI.body.classList.add(newTheme);
-                    SmartHub.state.currentTheme = newTheme;
-                }
+                // Set Dynamic Background
+                const hour = now.getHours();
+                const body = document.body;
+                body.classList.remove('theme-morning', 'theme-day', 'theme-evening', 'theme-night');
+                if (hour >= 5 && hour < 10) body.classList.add('theme-morning');
+                else if (hour >= 10 && hour < 17) body.classList.add('theme-day');
+                else if (hour >= 17 && hour < 21) body.classList.add('theme-evening');
+                else body.classList.add('theme-night');
             },
             updateWeather: function() {
-                const mockWeather = SmartHub.config.mockWeather;
-                SmartHub.state.currentMockWeatherIndex = (SmartHub.state.currentMockWeatherIndex + 1) % mockWeather.length;
-                const weather = mockWeather[SmartHub.state.currentMockWeatherIndex];
+                // This is a mock. In a real app, you'd fetch from an API.
+                const icons = ['sun', 'cloud-sun', 'cloud', 'cloudy', 'cloud-rain', 'cloud-snow', 'cloud-lightning'];
+                const descs = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Overcast', 'Rainy', 'Snowy', 'Stormy'];
+                const temp = Math.floor(Math.random() * 20 + 60); // Random temp 60-80
+                const randIndex = Math.floor(Math.random() * 4); // Stick to first 4 icons
                 
-                const tempFluctuation = Math.floor(Math.random() * 3) - 1; // -1 to +1
-                const displayTemp = weather.temp + tempFluctuation;
+                const iconEl = document.getElementById('weather-icon');
+                const tempEl = document.getElementById('weather-temp');
+                const descEl = document.getElementById('weather-desc');
+
+                if(iconEl) iconEl.setAttribute('data-lucide', icons[randIndex]);
+                if(tempEl) tempEl.textContent = `${temp}°F`;
+                if(descEl) descEl.textContent = descs[randIndex];
                 
-                if (SmartHub.UI.weather && SmartHub.UI.weather.temp) {
-                    SmartHub.UI.weather.temp.innerHTML = `${displayTemp}&deg;F`;
-                    SmartHub.UI.weather.desc.textContent = weather.desc;
-                    SmartHub.UI.weather.iconContainer.innerHTML = `<i data-lucide="${weather.icon}" class="w-10 h-10 ${weather.color}"></i>`;
-                    
-                    try {
-                        if (window.lucide) {
-                            lucide.createIcons({
-                                nodes: [SmartHub.UI.weather.iconContainer.querySelector('i')]
-                            });
-                        }
-                    } catch (e) {
-                        console.error("Failed to create weather icon:", e);
-                    }
-                }
+                // Set icon color
+                if(randIndex === 0) iconEl.className = 'w-10 h-10 text-yellow-400'; // Sunny
+                else if (randIndex > 3) iconEl.className = 'w-10 h-10 text-gray-400'; // Rain, etc.
+                else iconEl.className = 'w-10 h-10 text-blue-300'; // Cloudy
+
+                lucide.createIcons();
             }
         },
 
@@ -1310,4 +1305,3 @@
     </script>
 </body>
 </html>
-
