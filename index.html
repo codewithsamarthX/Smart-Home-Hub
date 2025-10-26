@@ -771,15 +771,27 @@
                     UI.ampmDisplay.textContent = ampm;
                 }
                 
+                // --- FIXED: Replaced old background logic with your new logic ---
+                // --- and merged it with the existing (better) state management ---
+                
                 // Set Dynamic Background
                 const hour = now.getHours();
-                const body = document.body;
-                body.classList.remove('theme-morning', 'theme-day', 'theme-evening', 'theme-night');
-                if (hour >= 5 && hour < 10) body.classList.add('theme-morning');
-                else if (hour >= 10 && hour < 17) body.classList.add('theme-day');
-                else if (hour >= 17 && hour < 21) body.classList.add('theme-evening');
-                else body.classList.add('theme-night');
+                const body = SmartHub.UI.body; // Use cached element
+                
+                let newTheme;
+                if (hour >= 5 && hour < 10) newTheme = 'theme-morning';
+                else if (hour >= 10 && hour < 17) newTheme = 'theme-day';
+                else if (hour >= 17 && hour < 21) newTheme = 'theme-evening';
+                else newTheme = 'theme-night';
+                
+                if (newTheme !== SmartHub.state.currentTheme && body) {
+                    if (SmartHub.state.currentTheme) body.classList.remove(SmartHub.state.currentTheme);
+                    body.classList.add(newTheme);
+                    SmartHub.state.currentTheme = newTheme;
+                }
             },
+            // --- FIXED: Replaced this entire function with your new logic ---
+            // --- and fixed the element selection to work with the HTML ---
             updateWeather: function() {
                 // This is a mock. In a real app, you'd fetch from an API.
                 const icons = ['sun', 'cloud-sun', 'cloud', 'cloudy', 'cloud-rain', 'cloud-snow', 'cloud-lightning'];
@@ -787,20 +799,34 @@
                 const temp = Math.floor(Math.random() * 20 + 60); // Random temp 60-80
                 const randIndex = Math.floor(Math.random() * 4); // Stick to first 4 icons
                 
-                const iconEl = document.getElementById('weather-icon');
-                const tempEl = document.getElementById('weather-temp');
-                const descEl = document.getElementById('weather-desc');
+                // --- FIXED: Target the correct cached UI elements ---
+                const iconContainerEl = SmartHub.UI.weather.iconContainer;
+                const tempEl = SmartHub.UI.weather.temp;
+                const descEl = SmartHub.UI.weather.desc;
 
-                if(iconEl) iconEl.setAttribute('data-lucide', icons[randIndex]);
+                let iconColor = 'text-blue-300'; // Default cloudy
+                if (randIndex === 0) iconColor = 'text-yellow-400'; // Sunny
+                else if (randIndex > 3) iconColor = 'text-gray-400'; // Rain, etc.
+
+                if (iconContainerEl) {
+                    // Find the first icon (the weather icon) and update it.
+                    const iconEl = iconContainerEl.querySelector('i:first-child');
+                    if (iconEl) {
+                        iconEl.setAttribute('data-lucide', icons[randIndex]);
+                        iconEl.className = `w-10 h-10 ${iconColor}`; // Replace all classes
+                    }
+                }
+
                 if(tempEl) tempEl.textContent = `${temp}°F`;
                 if(descEl) descEl.textContent = descs[randIndex];
                 
-                // Set icon color
-                if(randIndex === 0) iconEl.className = 'w-10 h-10 text-yellow-400'; // Sunny
-                else if (randIndex > 3) iconEl.className = 'w-10 h-10 text-gray-400'; // Rain, etc.
-                else iconEl.className = 'w-10 h-10 text-blue-300'; // Cloudy
-
-                lucide.createIcons();
+                try {
+                    if (window.lucide) {
+                        lucide.createIcons({
+                            nodes: iconContainerEl ? iconContainerEl.querySelectorAll('i') : []
+                        });
+                    }
+                } catch(e) { console.error("Failed to re-create weather icon", e); }
             }
         },
 
@@ -1275,7 +1301,7 @@
         }
     };
 
-       function updateClockAndDate() {
+   function updateClockAndDate() {
         const now = new Date();
 
         const dateStr = now.toLocaleDateString(undefined, {
@@ -1302,6 +1328,6 @@
 
       updateClockAndDate();
       setInterval(updateClockAndDate, 1000);
-    </script>
+   </script>
 </body>
 </html>
