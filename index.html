@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Smart Home Hub (V1 Effects)</title> <script src="https://cdn.tailwindcss.com"></script>
+    <title>Smart Home Hub </title> <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
     <style>
@@ -68,11 +68,12 @@
         }
         .temp-button:active { background-color: #4B5563; transform: scale(0.95); }
 
-        .scene-button {
+     .scene-button { 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 1rem; border-radius: .5rem; background-color: rgba(31,41,55,0.7);
             border: 1px solid rgba(55,65,81,0.5); backdrop-filter: blur(8px); color: #D1D5DB; transition: 200ms;
-            width: 140px; flex-shrink: 0;
+            position: relative; overflow: hidden;
+        
         }
         .scene-button:hover { background-color: rgba(55,65,81,0.8); color:white; }
         .scene-button.active { background-color: rgba(37,99,235,0.9); color:white; border-color:#3B82F6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
@@ -169,14 +170,12 @@
                 <h1 class="text-3xl md:text-4xl font-bold">Smart Hub</h1>
                 <p id="date-display" class="text-lg text-gray-400">Loading date...</p>
             </div>
-            <div class="text-right flex items-center gap-4">
+             <div class="text-right flex items-center gap-4">
                 <div class="flex gap-3 justify-end items-center">
-                    <div id="weather-icon-container" class="w-10 h-10">
-                        <i data-lucide="cloud-sun" class="w-10 h-10 text-yellow-400"></i>
-                    </div>
+                    <i data-lucide="cloud-sun" class="w-10 h-10 text-yellow-400" id="weather-icon"></i>
                     <div>
-                        <div id="weather-temp" class="text-2xl font-bold">--&deg;F</div>
-                        <div id="weather-desc" class="text-sm text-gray-400">Loading...</div>
+                        <div id="weather-temp" class="text-2xl font-bold">75&deg;F</div>
+                        <div id="weather-desc" class="text-sm text-gray-400">Partly Cloudy</div>
                     </div>
                 </div>
                 <div>
@@ -186,9 +185,9 @@
             </div>
         </header>
 
-        <section class="max-w-7xl mx-auto mb-8">
+         <section class="max-w-7xl mx-auto mb-8">
             <h2 class="text-2xl font-semibold mb-4">Scenes</h2>
-            <div class="flex overflow-x-auto gap-4 pb-4">
+            <div class="grid grid-cols-3 md:grid-cols-6 gap-4">
                 <button id="scene-good-morning" class="scene-button ripple-button" data-scene="goodMorning">
                     <i data-lucide="sunrise" class="mb-2"></i>
                     <span class="pointer-events-none">Good Morning</span>
@@ -205,11 +204,11 @@
                     <i data-lucide="power-off" class="mb-2"></i>
                     <span class="pointer-events-none">All Off</span>
                 </button>
-                <button class="scene-button ripple-button" data-scene="party">
-                    <i data-lucide="music" class="mb-2"></i>
+                <button id="scene-party-time" class="scene-button ripple-button" data-scene="partyTime">
+                    <i data-lucide="party-popper" class="mb-2"></i>
                     <span class="pointer-events-none">Party Time</span>
                 </button>
-                <button class="scene-button ripple-button" data-scene="focus">
+                <button id="scene-focus-mode" class="scene-button ripple-button" data-scene="focusMode">
                     <i data-lucide="brain" class="mb-2"></i>
                     <span class="pointer-events-none">Focus Mode</span>
                 </button>
@@ -341,6 +340,32 @@
                 </div>
             </div>
         </div>
+<div id="modal-overlay" class="modal-hidden"></div>
+        <div id="modal-box" class="modal-hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold">Add New Device</h2>
+                <button id="modal-close-button" class="p-1 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white ripple-button" aria-label="Close modal">
+                    <i data-lucide="x" class="w-6 h-6 pointer-events-none"></i>
+                </button>
+            </div>
+            <p class="text-gray-300 mb-6">Select a device type to add to your hub. (This is a demo, no new device will be added).</p>
+            <div class="grid grid-cols-2 gap-4">
+                <button class="scene-button ripple-button" aria-label="Add smart light">
+                    <i data-lucide="lightbulb" class="mb-2"></i><span>Smart Light</span>
+                </button>
+                <button class="scene-button ripple-button" aria-label="Add smart plug">
+                    <i data-lucide="plug" class="mb-2"></i><span>Smart Plug</span>
+                </button>
+                <button class="scene-button ripple-button" aria-label="Add camera">
+                    <i data-lucide="camera" class="mb-2"></i><span>Camera</span>
+                </button>
+                <button class="scene-button ripple-button" aria-label="Add door lock">
+                    <i data-lucide="lock" class="mb-2"></i><span>Door Lock</span>
+                </button>
+            </div>
+        </div>
+
+
     </main>
 
     <footer class="sticky bottom-0 bg-gray-900/80 backdrop-blur-md p-4 w-full border-t border-gray-700/50 z-20">
@@ -844,7 +869,7 @@
                     SmartHub.state.currentTheme = newTheme;
                 }
             },
-            updateWeather: function() {
+           updateWeather: function() {
                 const mockWeather = SmartHub.config.mockWeather;
                 SmartHub.state.currentMockWeatherIndex = (SmartHub.state.currentMockWeatherIndex + 1) % mockWeather.length;
                 const weather = mockWeather[SmartHub.state.currentMockWeatherIndex];
@@ -855,15 +880,10 @@
                 if (SmartHub.UI.weather && SmartHub.UI.weather.temp) {
                     SmartHub.UI.weather.temp.innerHTML = `${displayTemp}&deg;F`;
                     SmartHub.UI.weather.desc.textContent = weather.desc;
-                    
-                    // --- THIS IS THE FIX for Weather (continued) ---
-                    // 1. Wipe the container
-                    // 2. Add a new <i> tag
                     SmartHub.UI.weather.iconContainer.innerHTML = `<i data-lucide="${weather.icon}" class="w-10 h-10 ${weather.color}"></i>`;
                     
                     try {
                         if (window.lucide) {
-                            // 3. Run lucide *only* on the new icon
                             lucide.createIcons({
                                 nodes: [SmartHub.UI.weather.iconContainer.querySelector('i')]
                             });
