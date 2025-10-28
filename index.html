@@ -626,88 +626,101 @@
             
             // --- Cache UI Elements ---
             // NOW this part caches the *correct* <svg> elements, not the old <i> tags.
-            SmartHub.UI = {
-                body: document.body,
-                timeDisplay: document.getElementById('time-display'),
-                ampmDisplay: document.getElementById('ampm-display'),
-                dateDisplay: document.getElementById('date-display'),
-                weather: {
-                    // --- THIS IS THE FIX for Weather ---
-                    // It caches the parent container, not the icon itself.
-                    iconContainer: document.getElementById('weather-icon-container'),
-                    temp: document.getElementById('weather-temp'),
-                    desc: document.getElementById('weather-desc')
-                },
-                light: {
-                    card: document.getElementById('light-card'),
-                    controls: document.getElementById('light-controls'),
-                    intensity: document.getElementById('light-intensity'),
-                    value: document.getElementById('light-intensity-value'),
-                    icon: document.getElementById('light-icon'),
-                    colorControls: document.getElementById('light-color-controls'),
-                    colorSlider: document.getElementById('light-color')
-                },
-                fan: {
-                    card: document.getElementById('fan-card'),
-                    controls: document.getElementById('fan-controls'),
-                    speed: document.getElementById('fan-speed'),
-                    value: document.getElementById('fan-speed-value'),
-                    icon: document.getElementById('fan-icon') // This is now the <svg>
-                },
-                thermostat: {
-                    card: document.getElementById('thermostat-card'),
-                    display: document.getElementById('temp-display'),
-                    modeDisplay: document.getElementById('temp-mode-display'),
-                    icon: document.getElementById('thermostat-icon'), // This is now the <svg>
-                    tempUp: document.getElementById('temp-up'),
-                    tempDown: document.getElementById('temp-down'),
-                    modeContainer: document.getElementById('temp-mode-container'),
-                    modeButtons: document.querySelectorAll('.temp-mode-button')
-                },
-                lock: {
-                    card: document.getElementById('lock-card'),
-                    iconLocked: document.getElementById('lock-icon-locked'), // This is now the <svg>
-                    iconUnlocked: document.getElementById('lock-icon-unlocked'), // This is now the <svg>
-                    button: document.getElementById('lock-toggle-button'),
-                },
-                speaker: {
-                    card: document.getElementById('speaker-card'),
-                    icon: document.getElementById('speaker-icon'),
-                    volume: document.getElementById('speaker-volume'),
-                    value: document.getElementById('speaker-volume-value'),
-                    playButton: document.getElementById('play-pause'),
-                    playIcon: document.getElementById('play-icon'),
-                    pauseIcon: document.getElementById('pause-icon'),
-                    prevButton: document.getElementById('prev-track'),
-                    nextButton: document.getElementById('next-track'),
-                    trackTitle: document.getElementById('track-title'),
-                    nowIcon: document.getElementById('now-playing-icon'),
-                    nowText: document.getElementById('now-playing-text')
-                },
-                scenes: {
-                    goodMorning: document.getElementById('scene-good-morning'),
-                    movieNight: document.getElementById('scene-movie-night'),
-                    goodNight: document.getElementById('scene-good-night'),
-                    allOff: document.getElementById('scene-all-off'),
-                    partyTime: document.getElementById('scene-party-time'),
-                    focusMode: document.getElementById('scene-focus-mode'),
-                },
-                voice: {
-                    micButton: document.getElementById('mic-button'),
-                    micIcon: document.getElementById('mic-icon'),
-                    micActiveIcon: document.getElementById('mic-active-icon'),
-                    statusMessage: document.getElementById('status-message'),
-                    transcriptDisplay: document.getElementById('transcript-display')
-                },
-                addDeviceCard: document.getElementById('add-device-card'),
-                modal: {
-                    overlay: document.getElementById('modal-overlay'),
-                    box: document.getElementById('modal-box'),
-                    closeButton: document.getElementById('modal-close-button')
-                },
-                audioElement: document.getElementById('audio-element')
-            };
-            
+           // ---------------------- REPLACEMENT: SmartHub.UI block ----------------------
+SmartHub.UI = {
+  body: document.body,
+  timeDisplay: document.getElementById('time-display'),
+  ampmDisplay: document.getElementById('ampm-display'),
+  dateDisplay: document.getElementById('date-display'),
+  weather: {
+    // Use the actual icon element (wrap it if you prefer a separate container)
+    iconContainer: (function(){
+      // If you already have a wrapper with id 'weather-icon-container', use it,
+      // else create a small wrapper around the existing #weather-icon <i>.
+      const existing = document.getElementById('weather-icon-container');
+      if (existing) return existing;
+      const ico = document.getElementById('weather-icon');
+      if (!ico) return null;
+      // create container only if none exists
+      const wrap = document.createElement('div');
+      wrap.id = 'weather-icon-container';
+      ico.parentNode.insertBefore(wrap, ico);
+      wrap.appendChild(ico);
+      return wrap;
+    })(),
+    temp: document.getElementById('weather-temp'),
+    desc: document.getElementById('weather-desc')
+  },
+  light: {
+    card: document.getElementById('light-card'),
+    controls: document.getElementById('light-controls'),
+    intensity: document.getElementById('light-intensity'),
+    value: document.getElementById('light-intensity-value'),
+    icon: document.getElementById('light-icon'),
+    colorControls: document.getElementById('light-color-controls'),
+    colorSlider: document.getElementById('light-color')
+  },
+  fan: {
+    card: document.getElementById('fan-card'),
+    controls: document.getElementById('fan-controls'),
+    speed: document.getElementById('fan-speed'),
+    value: document.getElementById('fan-speed-value'),
+    icon: document.getElementById('fan-icon')
+  },
+  thermostat: {
+    card: document.getElementById('thermostat-card'),
+    display: document.getElementById('temp-display'),
+    modeDisplay: document.getElementById('temp-mode-display'),
+    icon: document.getElementById('thermostat-icon'),
+    tempUp: document.getElementById('temp-up'),
+    tempDown: document.getElementById('temp-down'),
+    modeContainer: document.getElementById('temp-mode-container'),
+    modeButtons: document.querySelectorAll('.temp-mode-button')
+  },
+  lock: {
+    card: document.getElementById('lock-card'),
+    iconLocked: document.getElementById('lock-icon-locked'),
+    iconUnlocked: document.getElementById('lock-icon-unlocked'),
+    button: document.getElementById('lock-toggle-button')
+  },
+  speaker: {
+    card: document.getElementById('speaker-card'),
+    icon: document.getElementById('speaker-icon'),
+    volume: document.getElementById('speaker-volume'),
+    value: document.getElementById('speaker-volume-value'),
+    playButton: document.getElementById('play-pause'),
+    playIcon: document.getElementById('play-icon'),
+    pauseIcon: document.getElementById('pause-icon'),
+    prevButton: document.getElementById('prev-track'),
+    nextButton: document.getElementById('next-track'),
+    trackTitle: document.getElementById('track-title'),
+    nowIcon: document.getElementById('now-playing-icon'),
+    nowText: document.getElementById('now-playing-text')
+  },
+  scenes: {
+    goodMorning: document.getElementById('scene-good-morning'),
+    movieNight: document.getElementById('scene-movie-night'),
+    goodNight: document.getElementById('scene-good-night'),
+    allOff: document.getElementById('scene-all-off'),
+    partyTime: document.getElementById('scene-party-time'),
+    focusMode: document.getElementById('scene-focus-mode')
+  },
+  voice: {
+    micButton: document.getElementById('mic-button'),
+    micIcon: document.getElementById('mic-icon'),
+    micActiveIcon: document.getElementById('mic-active-icon'),
+    statusMessage: document.getElementById('status-message'),
+    transcriptDisplay: document.getElementById('transcript-display')
+  },
+  addDeviceCard: document.getElementById('add-device-button'), // corrected ID
+  modal: {
+    overlay: document.getElementById('modal-overlay'),
+    box: document.getElementById('modal-box'),
+    closeButton: document.getElementById('modal-close-button')
+  },
+  audioElement: document.getElementById('audio-player') // point to actual <audio id="audio-player">
+};
+
             // --- Initialize Modules (NOW WITH SAFETY CHECKS) ---
             // These functions won't crash the app if elements are missing.
             SmartHub.Persistence.loadState();
