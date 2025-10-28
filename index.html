@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Smart Home Hub </title> <script src="https://cdn.tailwindcss.com"></script>
+    <title>Smart Home Hub - Room UI</title> 
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
     <style>
         :root {
             --thumb-border-color: #3b82f6;
+            /* --light-hue is now set per-card */
+            --fan-hue: 200;   /* Default fan hue (cyan) */
         }
 
         /* --- Custom Scrollbar --- */
@@ -68,12 +71,11 @@
         }
         .temp-button:active { background-color: #4B5563; transform: scale(0.95); }
 
-     .scene-button { 
+        .scene-button { 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 1rem; border-radius: .5rem; background-color: rgba(31,41,55,0.7);
             border: 1px solid rgba(55,65,81,0.5); backdrop-filter: blur(8px); color: #D1D5DB; transition: 200ms;
             position: relative; overflow: hidden;
-        
         }
         .scene-button:hover { background-color: rgba(55,65,81,0.8); color:white; }
         .scene-button.active { background-color: rgba(37,99,235,0.9); color:white; border-color:#3B82F6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
@@ -83,42 +85,91 @@
         .icon-locked { color: #EF4444; }
         .icon-unlocked { color: #10B981; }
         #fan-icon { will-change: transform; }
+        .icon-fan-on { color: hsl(var(--fan-hue, 200), 100%, 50%); filter: drop-shadow(0 0 8px hsl(var(--fan-hue, 200), 100%, 50%)); }
 
         @keyframes glow { /* Kept for speaker 'Now Playing' icon */
             0%,100% { filter: drop-shadow(0 0 6px var(--glow-color, #3b82f6)); }
             50% { filter: drop-shadow(0 0 12px var(--glow-color, #3b82f6)); }
         }
-        .glow-animate {
-            animation: glow 1.5s infinite;
-        }
+        .glow-animate { animation: glow 1.5s infinite; }
 
         /* --- Device Card --- */
         .device-card {
-            transition: transform 0.2s ease-in-out, border-color 0.3s ease; /* Adjusted transition */
+            background-color: rgba(31, 41, 55, 0.7); /* bg-gray-800/70 */
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(55, 65, 81, 0.5); /* border-gray-700/50 */
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); /* shadow-lg */
+            padding: 1.5rem; /* p-6 */
+            
+            /* NEW: Transition for filtering */
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, 
+                        opacity 0.3s ease, max-height 0.4s ease, 
+                        margin 0.4s ease, padding 0.4s ease;
+            transform-origin: center top;
+            overflow: hidden;
         }
-        .device-card:hover:not(:has(input:focus)):not(:has(button:focus)) {
+        .device-card:hover:not(.card-is-active):not(:has(input:focus)):not(:has(button:focus)) {
             transform: translateY(-4px) scale(1.02);
             border-color: rgba(107, 114, 128, 0.7);
-            /* Removed box-shadow on hover to match V1's simpler style */
+        }
+
+        /* NEW: Hidden state for device filtering */
+        .device-hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-bottom: 0;
+            border-width: 0;
+            pointer-events: none;
         }
 
         /* --- Card Active States (V1 Style: Border Only) --- */
-        /* Light card border is set dynamically via JS */
-        .card-active-blue { /* Thermostat Cool */
-            border-color: #3b82f6; /* Tailwind blue-500 */
+        .card-active-blue { border-color: #3b82f6; }
+        .card-active-red { border-color: #ef4444; }
+        .card-active-green { border-color: #10b981; }
+        .card-active-cyan { border-color: #22d3ee; }
+        .card-active-purple { border-color: #a78bfa; }
+
+        /* --- Expandable Card UX --- */
+        .collapsible-controls {
+            display: grid;
+            grid-template-rows: 0fr; /* Collapsed by default */
+            transition: grid-template-rows 0.4s ease-in-out;
+            overflow: hidden;
         }
-        .card-active-red { /* Thermostat Heat / Lock Locked */
-            border-color: #ef4444; /* Tailwind red-500 */
+        .collapsible-controls > div {
+            min-height: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease-out 0.1s;
         }
-        .card-active-green { /* Lock Unlocked */
-            border-color: #10b981; /* Tailwind green-500 */
+        .card-is-active .collapsible-controls {
+            grid-template-rows: 1fr; /* Expands to fit content */
+            margin-top: 1rem; /* Add some space when open */
         }
-        .card-active-cyan { /* Fan */
-            border-color: #22d3ee; /* cyan-400 */
+        .card-is-active .collapsible-controls > div {
+            opacity: 1;
         }
-        .card-active-purple { /* Speaker */
-            border-color: #a78bfa; /* violet-400 */
+        .card-status-text {
+            transition: color 0.3s ease;
         }
+        .card-is-active .card-status-text {
+            color: white;
+            font-weight: 600;
+        }
+
+        /* --- Active Card Glow Effects --- */
+        .card-is-active[data-device="light"] {
+            border-color: hsl(var(--light-hue), 100%, 70%);
+            box-shadow: 0 0 20px 5px hsla(var(--light-hue), 100%, 60%, 0.3);
+        }
+        .card-is-active[data-device="fan"] {
+            border-color: hsl(var(--fan-hue), 100%, 70%);
+            box-shadow: 0 0 20px 5px hsla(var(--fan-hue), 100%, 60%, 0.3);
+        }
+        /* --- End New Styles --- */
 
         /* --- Add Device Button --- */
         @keyframes pulse-border {
@@ -160,6 +211,27 @@
         .slider-container:has(input[type="range"]:active) .slider-tooltip {
             opacity: 1; bottom: 40px;
         }
+
+        /* --- NEW: Room Tab Button --- */
+        .room-tab-button {
+            padding: 0.5rem 1.25rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            color: #9ca3af; /* text-gray-400 */
+            background-color: transparent;
+            border: 1px solid #374151; /* border-gray-700 */
+            transition: all 0.2s ease;
+        }
+        .room-tab-button:hover {
+            color: white;
+            background-color: #374151; /* bg-gray-700 */
+        }
+        .room-tab-button.active {
+            color: white;
+            background-color: #2563eb; /* bg-blue-600 */
+            border-color: #2563eb;
+        }
+
     </style>
 </head>
 <body class="bg-gray-900 text-white font-sans antialiased min-h-screen flex flex-col">
@@ -215,52 +287,108 @@
             </div>
         </section>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            <div id="light-card" class="device-card bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-lg p-6 cursor-pointer" style="--light-hue: 200;"
-                 role="button" tabindex="0" aria-pressed="false" aria-label="Living Room Light toggle">
-                <div class="flex justify-between items-center mb-4 pointer-events-none">
+        <section class="max-w-7xl mx-auto mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Devices</h2>
+            <div id="room-tab-container" class="flex flex-wrap gap-3">
+                <button class="room-tab-button ripple-button active" data-room="all">All</button>
+                <button class="room-tab-button ripple-button" data-room="living-room">Living Room</button>
+                <button class="room-tab-button ripple-button" data-room="bedroom">Bedroom</button>
+                <button class="room-tab-button ripple-button" data-room="entry">Entry</button>
+            </div>
+        </section>
+        <div id="device-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+            
+            <div id="living-light-card" class="device-card cursor-pointer" 
+                 style="--light-hue: 200;"
+                 role="button" tabindex="0" aria-pressed="false" aria-label="Living Room Light toggle"
+                 data-device="light" data-room="living-room">
+                
+                <div class="flex justify-between items-center pointer-events-none">
                     <div class="flex items-center space-x-3">
-                        <i id="light-icon" data-lucide="lightbulb" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
+                        <i id="living-light-icon" data-lucide="lightbulb" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
                         <h2 class="text-2xl font-semibold">Living Room Light</h2>
                     </div>
+                    <span id="living-light-status-text" class="text-lg font-medium text-gray-400 card-status-text">Off</span>
                 </div>
-                <div id="light-controls" class="space-y-3 transition-opacity duration-300">
-                    <label for="light-intensity" class="block text-sm font-medium text-gray-400">Intensity</label>
-                    <div class="slider-container relative">
-                        <input type="range" id="light-intensity" min="0" max="100" value="50" class="w-full" aria-label="Light intensity">
-                        <div class="slider-tooltip" id="light-intensity-tooltip">50%</div>
-                    </div>
-                    <div id="light-intensity-value" class="text-center text-lg font-medium">50%</div>
-                </div>
-                <div id="light-color-controls" class="space-y-3 mt-4 transition-opacity duration-300">
-                    <label for="light-color" class="block text-sm font-medium text-gray-400">Color</label>
-                    <div class="slider-container relative">
-                        <input type="range" id="light-color" min="0" max="360" value="200" class="w-full color-slider" aria-label="Light color">
-                        <div class="slider-tooltip" id="light-color-tooltip" style="background-color: hsl(200, 100%, 50%)">Hue: 200°</div>
+
+                <div class="collapsible-controls">
+                    <div class="space-y-3">
+                        <div class="space-y-3 transition-opacity duration-300">
+                            <label for="living-light-intensity" class="block text-sm font-medium text-gray-400">Intensity</label>
+                            <div class="slider-container relative">
+                                <input type="range" id="living-light-intensity" min="0" max="100" value="50" class="w-full" aria-label="Light intensity">
+                                <div id="living-light-intensity-tooltip" class="slider-tooltip">50%</div>
+                            </div>
+                        </div>
+                        <div class="space-y-3 mt-4 transition-opacity duration-300">
+                            <label for="living-light-color" class="block text-sm font-medium text-gray-400">Color</label>
+                            <div class="slider-container relative">
+                                <input type="range" id="living-light-color" min="0" max="360" value="200" class="w-full color-slider" aria-label="Light color">
+                                <div id="living-light-color-tooltip" class="slider-tooltip" style="background-color: hsl(200, 100%, 50%)">Hue: 200°</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div id="fan-card" class="device-card bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-lg p-6 cursor-pointer"
-                 role="button" tabindex="0" aria-pressed="false" aria-label="Bedroom Fan toggle">
-                <div class="flex justify-between items-center mb-4 pointer-events-none">
+            <div id="bed-light-card" class="device-card cursor-pointer" 
+                 style="--light-hue: 30;"
+                 role="button" tabindex="0" aria-pressed="false" aria-label="Bedroom Light toggle"
+                 data-device="light" data-room="bedroom">
+                
+                <div class="flex justify-between items-center pointer-events-none">
+                    <div class="flex items-center space-x-3">
+                        <i id="bed-light-icon" data-lucide="lightbulb" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
+                        <h2 class="text-2xl font-semibold">Bedroom Light</h2>
+                    </div>
+                    <span id="bed-light-status-text" class="text-lg font-medium text-gray-400 card-status-text">Off</span>
+                </div>
+
+                <div class="collapsible-controls">
+                    <div class="space-y-3">
+                        <div class="space-y-3 transition-opacity duration-300">
+                            <label for="bed-light-intensity" class="block text-sm font-medium text-gray-400">Intensity</label>
+                            <div class="slider-container relative">
+                                <input type="range" id="bed-light-intensity" min="0" max="100" value="50" class="w-full" aria-label="Light intensity">
+                                <div id="bed-light-intensity-tooltip" class="slider-tooltip">50%</div>
+                            </div>
+                        </div>
+                        <div class="space-y-3 mt-4 transition-opacity duration-300">
+                            <label for="bed-light-color" class="block text-sm font-medium text-gray-400">Color</label>
+                            <div class="slider-container relative">
+                                <input type="range" id="bed-light-color" min="0" max="360" value="30" class="w-full color-slider" aria-label="Light color">
+                                <div id="bed-light-color-tooltip" class="slider-tooltip" style="background-color: hsl(30, 100%, 50%)">Hue: 30°</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="fan-card" class="device-card cursor-pointer"
+                 role="button" tabindex="0" aria-pressed="false" aria-label="Bedroom Fan toggle"
+                 data-device="fan" data-room="bedroom">
+                
+                <div class="flex justify-between items-center pointer-events-none">
                     <div class="flex items-center space-x-3">
                         <i id="fan-icon" data-lucide="fan" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
                         <h2 class="text-2xl font-semibold">Bedroom Fan</h2>
                     </div>
+                    <span id="fan-status-text" class="text-lg font-medium text-gray-400 card-status-text">Off</span>
                 </div>
-                <div id="fan-controls" class="space-y-3 transition-opacity duration-300">
-                    <label for="fan-speed" class="block text-sm font-medium text-gray-400">Speed</label>
-                    <div class="slider-container relative">
-                        <input type="range" id="fan-speed" min="0" max="5" value="2" step="1" class="w-full" aria-label="Fan speed">
-                        <div class="slider-tooltip" id="fan-speed-tooltip">Level 2</div>
+                
+                <div class="collapsible-controls">
+                    <div class="space-y-3">
+                        <div class="space-y-3 transition-opacity duration-300">
+                            <label for="fan-speed" class="block text-sm font-medium text-gray-400">Speed</label>
+                            <div class="slider-container relative">
+                                <input type="range" id="fan-speed" min="0" max="5" value="2" step="1" class="w-full" aria-label="Fan speed">
+                                <div id="fan-speed-tooltip" class="slider-tooltip">Level 2</div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="fan-speed-value" class="text-center text-lg font-medium">Level 2</div>
                 </div>
             </div>
 
-            <div id="thermostat-card" class="device-card bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-lg p-6">
-                <div class="flex justify-between items-center mb-4">
+            <div id="thermostat-card" class="device-card" data-room="all"> <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center space-x-3">
                         <i id="thermostat-icon" data-lucide="thermometer" class="w-7 h-7 text-gray-500 transition-colors duration-300"></i>
                         <h2 class="text-2xl font-semibold">Thermostat</h2>
@@ -281,7 +409,8 @@
                 </div>
             </div>
 
-            <div id="lock-card" class="device-card bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-lg p-6 card-active-red"> <div class="flex justify-between items-center mb-4">
+            <div id="lock-card" class="device-card card-active-red" data-room="entry">
+                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center space-x-3">
                         <i id="lock-icon-locked" data-lucide="lock" class="w-7 h-7 icon-locked transition-all duration-300"></i>
                         <i id="lock-icon-unlocked" data-lucide="lock-open" class="w-7 h-7 icon-unlocked transition-all duration-300 hidden"></i>
@@ -293,7 +422,7 @@
                 </button>
             </div>
 
-            <div id="speaker-card" class="device-card bg-gray-800/70 backdrop-blur-lg border border-gray-700/50 rounded-xl shadow-lg p-6">
+            <div id="speaker-card" class="device-card" data-room="living-room">
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center space-x-3">
                         <i id="speaker-icon" data-lucide="volume-2" class="w-7 h-7 text-gray-500 transition-colors duration-300"></i>
@@ -332,15 +461,17 @@
                 </div>
             </div>
 
-            <div id="add-device-button" class="device-card bg-gray-800/70 backdrop-blur-lg border border-dashed border-gray-700/50 rounded-xl shadow-lg p-6 flex items-center justify-center cursor-pointer"
-                 role="button" tabindex="0" aria-label="Add new device">
-                <div class="text-center text-gray-500 pointer-events-none">
-                    <i data-lucide="plus-circle" class="w-12 h-12 mb-2 inline-block"></i>
-                    <p>Add New Device</p>
+            <div id="add-device-button" class="device-card border-dashed cursor-pointer"
+                 role="button" tabindex="0" aria-label="Add new device" data-room="all"> <div class="flex items-center justify-center h-full pointer-events-none">
+                    <div class="text-center text-gray-500">
+                        <i data-lucide="plus-circle" class="w-12 h-12 mb-2 inline-block"></i>
+                        <p>Add New Device</p>
+                    </div>
                 </div>
             </div>
         </div>
-<div id="modal-overlay" class="modal-hidden"></div>
+
+        <div id="modal-overlay" class="modal-hidden"></div>
         <div id="modal-box" class="modal-hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-semibold">Add New Device</h2>
@@ -364,8 +495,6 @@
                 </button>
             </div>
         </div>
-
-
     </main>
 
     <footer class="sticky bottom-0 bg-gray-900/80 backdrop-blur-md p-4 w-full border-t border-gray-700/50 z-20">
@@ -381,25 +510,9 @@
     </footer>
 
     <audio id="audio-player" preload="metadata"></audio>
-    <audio id="audio-click" preload="auto" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tQwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZGVoAAAAgAAAAREBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB8DzPQ//tQwRAAlwAACpAAAAP/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAAAAAADyAABQIR0ADSIAY2BsoBBNpgAAAYEUQCgKAABsxUQCgAB/gRqAR2AAAYEQCgGgAF/hpkAR0BCAYEQAgGgAF/hpkAR0BCQYEQAgGgAF/hpkAR0BCT//tQwRMAHAAACPAED/8EHAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVIndiamEAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAD/tQwQcAJwAACNABA//EGGAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAAADyAAAAAAAAAAEAAAJiZmFtaWx5AAAAAAAAAABMYXZjNTguNzYuMTAwAAAAAAAAAAAAAAAAAAAAAAD/mZzAzAAAADv/7UMIJwP/9P/9AAGjABwA3bW1BAAggAATYwEQFADEQAAdjd1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1c="></audio>
+    <audio id="audio-click" preload="auto" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tQwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZGVoAAAAgAAAAREBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB8DzPQ//tQwRAAlwAACpAAAAP/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAAAAAADyAABQIR0ADSIAY2BsoBBNpgAAAYEUQCgKAABsxUQCgAB/gRqAR2AAAYEQCgGgAF/hpkAR0BCAYEQAgGgAF/hpkAR0BCQYEQAgGgAF/hpkAR0BCT//tQwRMAHAAACPAED/8EHAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVIndiamEAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAD/tQwQcAJwAACNABA//EGGAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAAADyAAAAAAAAAAEAAAJiZmFtaWx5AAAAAAAAAABMYXZjNTguNzYuMTAwAAAAAAAAAAAAAAAAAAAAAAD/mZzAzAAAADv/7UMIJwP/9P/9AAGjABwA3bW1BAAggAATYwEQFADEQAAdjd1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1c="></audio>
     <audio id="audio-toggle" preload="auto" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tQwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZGVoAAAAgAAAAREBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB8DzPQ//tQwRMAHgAACpAAAAP/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAAAAAADyAABQIR0ADSIAY2BsoBBNpgAAAYEUQCgKAABsxUQCgAB/gRqAR2AAAYEQCgGgAF/hpkAR0BCAYEQAgGgAF/hpkAR0BCQYEQAgGgAF/hpkAR0BCT//tQwROAHAAACPAED/8EHAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVIndiamEAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAD/Type/7UMFPAAABuAACNABA//EGGAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV"></audio>
-
-    <div id="modal-overlay" class="modal-hidden"></div>
-    <div id="modal-box" class="modal-hidden">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-semibold">Add New Device</h2>
-            <button id="modal-close-button" class="p-1 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white ripple-button" aria-label="Close modal">
-                <i data-lucide="x" class="w-6 h-6 pointer-events-none"></i>
-            </button>
-        </div>
-        <p class="text-gray-300 mb-6">Select a device type to add. (Demo only).</p>
-        <div class="grid grid-cols-2 gap-4">
-            <button class="scene-button ripple-button"><i data-lucide="lightbulb" class="mb-2"></i><span>Smart Light</span></button>
-            <button class="scene-button ripple-button"><i data-lucide="plug" class="mb-2"></i><span>Smart Plug</span></button>
-            <button class="scene-button ripple-button"><i data-lucide="camera" class="mb-2"></i><span>Camera</span></button>
-            <button class="scene-button ripple-button"><i data-lucide="lock" class="mb-2"></i><span>Door Lock</span></button>
-        </div>
-    </div>
+    
 
   <script>
     // --- Main App Initializer ---
@@ -412,12 +525,15 @@
 
         // --- 1. Application State ---
         state: {
-            light: { intensity: 50, lastKnownIntensity: 50, hue: 200 },
+            // NEW: Added a second light state
+            livingLight: { intensity: 50, lastKnownIntensity: 50, hue: 200 },
+            bedLight: { intensity: 50, lastKnownIntensity: 50, hue: 30 },
             fan: { speed: 2, lastKnownSpeed: 2 },
             thermostat: { temperature: 68, mode: 'Off' },
             lock: { isLocked: true },
             speaker: { isPlaying: false, volume: 30, trackIndex: 0 },
             activeScene: null,
+            currentRoom: 'all', // NEW: State for room filtering
             statusTimer: null,
             listening: false,
             currentMockWeatherIndex: 1,
@@ -426,6 +542,7 @@
 
         // --- 2. Static Configuration ---
         config: {
+            // ... (All other configs are the same)
             playlist: [
                 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
                 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
@@ -440,12 +557,12 @@
                 { desc: 'Rain', temp: 68, icon: 'cloud-rain', color: 'text-blue-400' },
                 { desc: 'Clear Night', temp: 65, icon: 'moon', color: 'text-blue-200' }
             ],
-            
             scenes: {
                 'goodMorning': {
                     message: "Activated 'Good Morning' scene.",
                     updates: {
-                        light: { intensity: 70, lastKnownIntensity: 70, hue: 50 },
+                        livingLight: { intensity: 70, lastKnownIntensity: 70, hue: 50 },
+                        bedLight: { intensity: 60, lastKnownIntensity: 60, hue: 40 },
                         fan: { speed: 0 },
                         thermostat: { temperature: 68, mode: 'Heat' },
                         lock: { isLocked: false }
@@ -454,7 +571,8 @@
                 'movieNight': {
                     message: "Activated 'Movie Night' scene.",
                     updates: {
-                        light: { intensity: 20, lastKnownIntensity: 20, hue: 240 },
+                        livingLight: { intensity: 20, lastKnownIntensity: 20, hue: 240 },
+                        bedLight: { intensity: 0 },
                         fan: { speed: 1, lastKnownSpeed: 1 },
                         lock: { isLocked: true }
                     },
@@ -463,7 +581,8 @@
                 'goodNight': {
                     message: "Activated 'Good Night' scene.",
                     updates: {
-                        light: { intensity: 0 },
+                        livingLight: { intensity: 0 },
+                        bedLight: { intensity: 0 },
                         fan: { speed: 0 },
                         thermostat: { temperature: 65, mode: 'Heat' },
                         lock: { isLocked: true }
@@ -473,7 +592,8 @@
                 'allOff': {
                     message: "Turned all devices off.",
                     updates: {
-                        light: { intensity: 0 },
+                        livingLight: { intensity: 0 },
+                        bedLight: { intensity: 0 },
                         fan: { speed: 0 },
                         thermostat: { mode: 'Off' }
                     },
@@ -482,7 +602,8 @@
                 'partyTime': {
                     message: "Let's get this party started!",
                     updates: {
-                        light: { intensity: 100, lastKnownIntensity: 100, hue: 300 },
+                        livingLight: { intensity: 100, lastKnownIntensity: 100, hue: 300 },
+                        bedLight: { intensity: 80, lastKnownIntensity: 80, hue: 200 },
                         fan: { speed: 1, lastKnownSpeed: 1 },
                         thermostat: { temperature: 70, mode: 'Cool' },
                         lock: { isLocked: true }
@@ -492,7 +613,8 @@
                 'focusMode': {
                     message: "Activating 'Focus Mode'.",
                     updates: {
-                        light: { intensity: 60, lastKnownIntensity: 60, hue: 220 },
+                        livingLight: { intensity: 60, lastKnownIntensity: 60, hue: 220 },
+                        bedLight: { intensity: 0 },
                         fan: { speed: 1, lastKnownSpeed: 1 },
                         thermostat: { temperature: 68, mode: 'Heat' },
                         lock: { isLocked: true }
@@ -501,49 +623,72 @@
                 }
             },
             
+            // --- UPDATED: Commands to target specific lights ---
             commands: [
+                // ... (Scenes, thermostat, fan, lock commands are the same)
                 { regex: /good morning/i, handler: () => SmartHub.EventHandlers.runScene('goodMorning') },
                 { regex: /movie night/i, handler: () => SmartHub.EventHandlers.runScene('movieNight') },
                 { regex: /good night/i, handler: () => SmartHub.EventHandlers.runScene('goodNight') },
                 { regex: /(turn everything off|all off)/i, handler: () => SmartHub.EventHandlers.runScene('allOff') },
                 { regex: /party time/i, handler: () => SmartHub.EventHandlers.runScene('partyTime') },
                 { regex: /focus mode/i, handler: () => SmartHub.EventHandlers.runScene('focusMode') },
+                
+                // NEW: Light commands
                 { 
-                    regex: /light (on|off)/i,
+                    regex: /(living room light|living light) (on|off)/i,
                     handler: (matches) => {
-                        const state = SmartHub.state;
-                        if (matches[1] === 'on') {
-                            state.light.intensity = state.light.lastKnownIntensity;
-                            SmartHub.Speech.showStatus("OK, turning on the light.");
+                        const state = SmartHub.state.livingLight;
+                        if (matches[2] === 'on') {
+                            state.intensity = state.lastKnownIntensity;
                         } else {
-                            state.light.intensity = 0;
-                            SmartHub.Speech.showStatus("OK, turning off the light.");
+                            state.intensity = 0;
                         }
+                        SmartHub.Speech.showStatus(`OK, turning ${matches[2]} the living room light.`);
                     }
                 },
+                { 
+                    regex: /(bedroom light|bed light) (on|off)/i,
+                    handler: (matches) => {
+                        const state = SmartHub.state.bedLight;
+                        if (matches[2] === 'on') {
+                            state.intensity = state.lastKnownIntensity;
+                        } else {
+                            state.intensity = 0;
+                        }
+                        SmartHub.Speech.showStatus(`OK, turning ${matches[2]} the bedroom light.`);
+                    }
+                },
+                { 
+                    regex: /(turn on all lights|lights on)/i,
+                    handler: () => {
+                        SmartHub.state.livingLight.intensity = SmartHub.state.livingLight.lastKnownIntensity;
+                        SmartHub.state.bedLight.intensity = SmartHub.state.bedLight.lastKnownIntensity;
+                        SmartHub.Speech.showStatus(`OK, turning on all lights.`);
+                    }
+                },
+                { 
+                    regex: /(turn off all lights|lights off)/i,
+                    handler: () => {
+                        SmartHub.state.livingLight.intensity = 0;
+                        SmartHub.state.bedLight.intensity = 0;
+                        SmartHub.Speech.showStatus(`OK, turning off all lights.`);
+                    }
+                },
+                { 
+                    regex: /(set living room light to|set living light to)/i,
+                    handler: (matches, command) => SmartHub.EventHandlers.handleLightCommand(command, 'livingLight')
+                },
+                { 
+                    regex: /(set bedroom light to|set bed light to)/i,
+                    handler: (matches, command) => SmartHub.EventHandlers.handleLightCommand(command, 'bedLight')
+                },
+                // Fallback for "set light" - assume living room
                 { 
                     regex: /(set light to|change light to|set light intensity to)/i,
-                    handler: (matches, command) => {
-                        const state = SmartHub.state.light;
-                        const parser = SmartHub.Speech.parseNumber;
-                        const colorMap = SmartHub.config.colorMap;
-                        
-                        const colorWord = Object.keys(colorMap).find(c => command.includes(c));
-                        const intensity = parser(command);
-
-                        if (colorWord) {
-                            state.hue = colorMap[colorWord];
-                            if (state.intensity === 0) state.intensity = state.lastKnownIntensity;
-                            SmartHub.Speech.showStatus(`Set light color to ${colorWord}.`);
-                        } else if (intensity !== null && intensity >= 0 && intensity <= 100) {
-                            state.intensity = intensity;
-                            if (intensity > 0) state.lastKnownIntensity = intensity;
-                            SmartHub.Speech.showStatus(`Set light intensity to ${intensity}%.`);
-                        } else {
-                            SmartHub.Speech.showStatus("Didn't catch that. Try 'set light to 50%' or 'set light to blue'.");
-                        }
-                    }
+                    handler: (matches, command) => SmartHub.EventHandlers.handleLightCommand(command, 'livingLight')
                 },
+
+                // Fan commands (unchanged)
                 { 
                     regex: /fan (on|off)/i,
                     handler: (matches) => {
@@ -570,7 +715,8 @@
                         }
                     }
                 },
-                { 
+                // ... (Thermostat, Lock, Speaker commands are the same)
+                 { 
                     regex: /set temperature to/i,
                     handler: (matches, command) => {
                         const temp = SmartHub.Speech.parseNumber(command);
@@ -612,9 +758,6 @@
         // --- 4. Main Initializer ---
         init: function() {
             try {
-                // --- THIS IS THE FIX for Fan, Lock, etc. ---
-                // We run lucide.createIcons() *FIRST* to create all <svg> icons.
-                // We also remove the width/height override to let Tailwind classes work.
                 if (window.lucide) {
                     lucide.createIcons();
                 } else {
@@ -624,105 +767,116 @@
                 console.error("Error creating icons (this is safe to ignore):", e);
             }
             
-            // --- Cache UI Elements ---
-            // NOW this part caches the *correct* <svg> elements, not the old <i> tags.
-           // ---------------------- REPLACEMENT: SmartHub.UI block ----------------------
-SmartHub.UI = {
-  body: document.body,
-  timeDisplay: document.getElementById('time-display'),
-  ampmDisplay: document.getElementById('ampm-display'),
-  dateDisplay: document.getElementById('date-display'),
-  weather: {
-    // Use the actual icon element (wrap it if you prefer a separate container)
-    iconContainer: (function(){
-      // If you already have a wrapper with id 'weather-icon-container', use it,
-      // else create a small wrapper around the existing #weather-icon <i>.
-      const existing = document.getElementById('weather-icon-container');
-      if (existing) return existing;
-      const ico = document.getElementById('weather-icon');
-      if (!ico) return null;
-      // create container only if none exists
-      const wrap = document.createElement('div');
-      wrap.id = 'weather-icon-container';
-      ico.parentNode.insertBefore(wrap, ico);
-      wrap.appendChild(ico);
-      return wrap;
-    })(),
-    temp: document.getElementById('weather-temp'),
-    desc: document.getElementById('weather-desc')
-  },
-  light: {
-    card: document.getElementById('light-card'),
-    controls: document.getElementById('light-controls'),
-    intensity: document.getElementById('light-intensity'),
-    value: document.getElementById('light-intensity-value'),
-    icon: document.getElementById('light-icon'),
-    colorControls: document.getElementById('light-color-controls'),
-    colorSlider: document.getElementById('light-color')
-  },
-  fan: {
-    card: document.getElementById('fan-card'),
-    controls: document.getElementById('fan-controls'),
-    speed: document.getElementById('fan-speed'),
-    value: document.getElementById('fan-speed-value'),
-    icon: document.getElementById('fan-icon')
-  },
-  thermostat: {
-    card: document.getElementById('thermostat-card'),
-    display: document.getElementById('temp-display'),
-    modeDisplay: document.getElementById('temp-mode-display'),
-    icon: document.getElementById('thermostat-icon'),
-    tempUp: document.getElementById('temp-up'),
-    tempDown: document.getElementById('temp-down'),
-    modeContainer: document.getElementById('temp-mode-container'),
-    modeButtons: document.querySelectorAll('.temp-mode-button')
-  },
-  lock: {
-    card: document.getElementById('lock-card'),
-    iconLocked: document.getElementById('lock-icon-locked'),
-    iconUnlocked: document.getElementById('lock-icon-unlocked'),
-    button: document.getElementById('lock-toggle-button')
-  },
-  speaker: {
-    card: document.getElementById('speaker-card'),
-    icon: document.getElementById('speaker-icon'),
-    volume: document.getElementById('speaker-volume'),
-    value: document.getElementById('speaker-volume-value'),
-    playButton: document.getElementById('play-pause'),
-    playIcon: document.getElementById('play-icon'),
-    pauseIcon: document.getElementById('pause-icon'),
-    prevButton: document.getElementById('prev-track'),
-    nextButton: document.getElementById('next-track'),
-    trackTitle: document.getElementById('track-title'),
-    nowIcon: document.getElementById('now-playing-icon'),
-    nowText: document.getElementById('now-playing-text')
-  },
-  scenes: {
-    goodMorning: document.getElementById('scene-good-morning'),
-    movieNight: document.getElementById('scene-movie-night'),
-    goodNight: document.getElementById('scene-good-night'),
-    allOff: document.getElementById('scene-all-off'),
-    partyTime: document.getElementById('scene-party-time'),
-    focusMode: document.getElementById('scene-focus-mode')
-  },
-  voice: {
-    micButton: document.getElementById('mic-button'),
-    micIcon: document.getElementById('mic-icon'),
-    micActiveIcon: document.getElementById('mic-active-icon'),
-    statusMessage: document.getElementById('status-message'),
-    transcriptDisplay: document.getElementById('transcript-display')
-  },
-  addDeviceCard: document.getElementById('add-device-button'), // corrected ID
-  modal: {
-    overlay: document.getElementById('modal-overlay'),
-    box: document.getElementById('modal-box'),
-    closeButton: document.getElementById('modal-close-button')
-  },
-  audioElement: document.getElementById('audio-player') // point to actual <audio id="audio-player">
-};
+            // --- UPDATED: UI Element Cache ---
+            SmartHub.UI = {
+              body: document.body,
+              timeDisplay: document.getElementById('time-display'),
+              ampmDisplay: document.getElementById('ampm-display'),
+              dateDisplay: document.getElementById('date-display'),
+              weather: {
+                iconContainer: (function(){
+                  const ico = document.getElementById('weather-icon');
+                  if (!ico) return null;
+                  const wrap = document.createElement('div');
+                  wrap.id = 'weather-icon-container';
+                  ico.parentNode.insertBefore(wrap, ico);
+                  wrap.appendChild(ico);
+                  return wrap;
+                })(),
+                temp: document.getElementById('weather-temp'),
+                desc: document.getElementById('weather-desc')
+              },
+              // NEW: Caching two separate lights
+              livingLight: {
+                card: document.getElementById('living-light-card'),
+                intensity: document.getElementById('living-light-intensity'),
+                statusText: document.getElementById('living-light-status-text'),
+                icon: document.getElementById('living-light-icon'),
+                colorSlider: document.getElementById('living-light-color'),
+                intensityTooltip: document.getElementById('living-light-intensity-tooltip'),
+                colorTooltip: document.getElementById('living-light-color-tooltip')
+              },
+              bedLight: {
+                card: document.getElementById('bed-light-card'),
+                intensity: document.getElementById('bed-light-intensity'),
+                statusText: document.getElementById('bed-light-status-text'),
+                icon: document.getElementById('bed-light-icon'),
+                colorSlider: document.getElementById('bed-light-color'),
+                intensityTooltip: document.getElementById('bed-light-intensity-tooltip'),
+                colorTooltip: document.getElementById('bed-light-color-tooltip')
+              },
+              fan: {
+                card: document.getElementById('fan-card'),
+                speed: document.getElementById('fan-speed'),
+                statusText: document.getElementById('fan-status-text'),
+                icon: document.getElementById('fan-icon'),
+                speedTooltip: document.getElementById('fan-speed-tooltip')
+              },
+              thermostat: {
+                card: document.getElementById('thermostat-card'),
+                display: document.getElementById('temp-display'),
+                modeDisplay: document.getElementById('temp-mode-display'),
+                icon: document.getElementById('thermostat-icon'),
+                tempUp: document.getElementById('temp-up'),
+                tempDown: document.getElementById('temp-down'),
+                modeContainer: document.getElementById('temp-mode-container'),
+                modeButtons: document.querySelectorAll('.temp-mode-button')
+              },
+              lock: {
+                card: document.getElementById('lock-card'),
+                iconLocked: document.getElementById('lock-icon-locked'),
+                iconUnlocked: document.getElementById('lock-icon-unlocked'),
+                button: document.getElementById('lock-toggle-button')
+              },
+              speaker: {
+                card: document.getElementById('speaker-card'),
+                icon: document.getElementById('speaker-icon'),
+                volume: document.getElementById('speaker-volume'),
+                value: document.getElementById('speaker-volume-value'),
+                volumeTooltip: document.getElementById('speaker-volume-tooltip'),
+                playButton: document.getElementById('play-pause'),
+                playIcon: document.getElementById('play-icon'),
+                pauseIcon: document.getElementById('pause-icon'),
+                prevButton: document.getElementById('prev-track'),
+                nextButton: document.getElementById('next-track'),
+                trackTitle: document.getElementById('track-title'),
+                nowIcon: document.getElementById('now-playing-icon'),
+                nowText: document.getElementById('now-playing-text')
+              },
+              scenes: {
+                goodMorning: document.getElementById('scene-good-morning'),
+                movieNight: document.getElementById('scene-movie-night'),
+                goodNight: document.getElementById('scene-good-night'),
+                allOff: document.getElementById('scene-all-off'),
+                partyTime: document.getElementById('scene-party-time'),
+                focusMode: document.getElementById('scene-focus-mode')
+              },
+              voice: {
+                micButton: document.getElementById('mic-button'),
+                micIcon: document.getElementById('mic-icon'),
+                micActiveIcon: document.getElementById('mic-active-icon'),
+                statusMessage: document.getElementById('status-message'),
+                transcriptDisplay: document.getElementById('transcript-display')
+              },
+              addDeviceCard: document.getElementById('add-device-button'),
+              modal: {
+                overlay: document.getElementById('modal-overlay'),
+                box: document.getElementById('modal-box'),
+                closeButton: document.getElementById('modal-close-button')
+              },
+              audioElement: document.getElementById('audio-player'),
+              // NEW: Caching for room filtering
+              room: {
+                tabContainer: document.getElementById('room-tab-container'),
+                tabs: document.querySelectorAll('.room-tab-button'),
+                deviceGrid: document.getElementById('device-grid'),
+                allDevices: document.querySelectorAll('#device-grid .device-card')
+              }
+            };
+            // --- End UI Cache Update ---
 
-            // --- Initialize Modules (NOW WITH SAFETY CHECKS) ---
-            // These functions won't crash the app if elements are missing.
+
+            // --- Initialize Modules ---
             SmartHub.Persistence.loadState();
             SmartHub.AudioPlayer.init();
             SmartHub.Speech.init();
@@ -730,23 +884,26 @@ SmartHub.UI = {
 
             // --- Run Initial Updates ---
             SmartHub.UIUpdater.updateAllUIs();
-            SmartHub.HeaderDisplay.updateClock(); // This will update the "Loading date..."
-            SmartHub.HeaderDisplay.updateWeather(); // This will update the "75&deg;F"
+            SmartHub.HeaderDisplay.updateClock();
+            SmartHub.HeaderDisplay.updateWeather(); 
+            SmartHub.UIUpdater.filterDevicesByRoom(); // NEW: Run filter on load
             
             // --- Start Timers ---
             setInterval(() => SmartHub.HeaderDisplay.updateClock(), 1000); 
             setInterval(() => SmartHub.HeaderDisplay.updateWeather(), 300000); 
         },
         
-        // --- 5. Persistence Module ---
+        // --- 5. Persistence Module (Unchanged) ---
         Persistence: {
             saveState: function() {
                 try {
                     const stateToSave = { ...SmartHub.state };
+                    // ... (delete transient state)
                     delete stateToSave.statusTimer;
                     delete stateToSave.listening;
                     delete stateToSave.activeScene;
                     delete stateToSave.currentTheme;
+                    delete stateToSave.currentRoom; // Don't save the active room
                     localStorage.setItem('smartHubState', JSON.stringify(stateToSave));
                 } catch (e) {
                     console.warn("Could not save state to localStorage", e);
@@ -758,10 +915,12 @@ SmartHub.UI = {
                     if (savedState) {
                         const parsedState = JSON.parse(savedState);
                         Object.assign(SmartHub.state, parsedState);
+                        // ... (reset transient state)
                         SmartHub.state.listening = false;
                         SmartHub.state.statusTimer = null;
                         SmartHub.state.activeScene = null;
                         SmartHub.state.currentTheme = null;
+                        SmartHub.state.currentRoom = 'all'; // Default to 'all'
                     }
                 } catch (e) {
                     console.warn("Could not load state from localStorage", e);
@@ -769,15 +928,11 @@ SmartHub.UI = {
             }
         },
 
-        // --- 6. Audio Player Module ---
+        // --- 6. Audio Player Module (Unchanged) ---
         AudioPlayer: {
             init: function() {
                 const el = SmartHub.UI.audioElement;
-                // --- HARDENED: Safety check ---
-                if (!el) {
-                    console.warn("Audio element not found. Speaker card disabled.");
-                    return; 
-                }
+                if (!el) { console.warn("Audio element not found."); return; }
                 el.volume = SmartHub.state.speaker.volume / 100;
                 el.addEventListener('ended', () => SmartHub.AudioPlayer.next());
                 el.addEventListener('play', () => {
@@ -791,7 +946,7 @@ SmartHub.UI = {
             },
             loadTrack: function(index) {
                 const el = SmartHub.UI.audioElement;
-                if (!el) return; // Safety check
+                if (!el) return;
                 const playlist = SmartHub.config.playlist;
                 if (!playlist.length) return;
                 
@@ -807,7 +962,7 @@ SmartHub.UI = {
             },
             play: function() {
                 const el = SmartHub.UI.audioElement;
-                if (!el) return; // Safety check
+                if (!el) return;
                 if (!el.src) {
                     this.loadTrack(SmartHub.state.speaker.trackIndex);
                 }
@@ -821,7 +976,7 @@ SmartHub.UI = {
             },
             pause: function() {
                 const el = SmartHub.UI.audioElement;
-                if (!el) return; // Safety check
+                if (!el) return;
                 el.pause();
             },
             next: function() {
@@ -836,7 +991,7 @@ SmartHub.UI = {
             },
             setVolume: function(v) {
                 const el = SmartHub.UI.audioElement;
-                if (!el) return; // Safety check
+                if (!el) return;
                 const value = Math.max(0, Math.min(100, Number(v)));
                 SmartHub.state.speaker.volume = value;
                 el.volume = value / 100;
@@ -844,13 +999,12 @@ SmartHub.UI = {
             }
         },
         
-        // --- 7. Header Display Module (THIS CONTROLS THE CLOCK/DATE) ---
+        // --- 7. Header Display Module (Unchanged) ---
         HeaderDisplay: {
             updateClock: function() {
                 const now = new Date();
                 const UI = SmartHub.UI;
                 
-                // This updates the date
                 if (UI.dateDisplay) {
                     UI.dateDisplay.textContent = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 }
@@ -859,9 +1013,8 @@ SmartHub.UI = {
                 const minutes = now.getMinutes().toString().padStart(2, '0');
                 const seconds = now.getSeconds().toString().padStart(2, '0');
                 const ampm = hours >= 12 ? 'PM' : 'AM';
-                const displayHours = hours % 12 ? (hours % 12) : 12; // 0 (midnight) becomes 12
+                const displayHours = hours % 12 ? (hours % 12) : 12; 
                 
-                // This updates the time
                 if (UI.timeDisplay) {
                     UI.timeDisplay.textContent = `${displayHours.toString().padStart(2, ' ')}:${minutes}:${seconds}`;
                 }
@@ -869,8 +1022,7 @@ SmartHub.UI = {
                     UI.ampmDisplay.textContent = ampm;
                 }
                 
-                // This updates the dynamic background
-                let newTheme = 'theme-day'; // Default
+                let newTheme = 'theme-day';
                 if (hours >= 5 && hours < 12) newTheme = 'theme-morning';
                 else if (hours >= 12 && hours < 18) newTheme = 'theme-day';
                 else if (hours >= 18 && hours < 22) newTheme = 'theme-evening';
@@ -887,10 +1039,10 @@ SmartHub.UI = {
                 SmartHub.state.currentMockWeatherIndex = (SmartHub.state.currentMockWeatherIndex + 1) % mockWeather.length;
                 const weather = mockWeather[SmartHub.state.currentMockWeatherIndex];
                 
-                const tempFluctuation = Math.floor(Math.random() * 3) - 1; // -1 to +1
+                const tempFluctuation = Math.floor(Math.random() * 3) - 1; 
                 const displayTemp = weather.temp + tempFluctuation;
                 
-                if (SmartHub.UI.weather && SmartHub.UI.weather.temp) {
+                if (SmartHub.UI.weather && SmartHub.UI.weather.temp && SmartHub.UI.weather.iconContainer) {
                     SmartHub.UI.weather.temp.innerHTML = `${displayTemp}&deg;F`;
                     SmartHub.UI.weather.desc.textContent = weather.desc;
                     SmartHub.UI.weather.iconContainer.innerHTML = `<i data-lucide="${weather.icon}" class="w-10 h-10 ${weather.color}"></i>`;
@@ -915,49 +1067,71 @@ SmartHub.UI = {
                 const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
                 slider.style.background = `linear-gradient(to right, ${color} ${value}%, #374151 ${value}%)`;
             },
-            updateLightUI: function() {
-                const { intensity, hue } = SmartHub.state.light;
-                const isOn = intensity > 0;
-                const UI = SmartHub.UI.light;
-                if (!UI || !UI.card) return; // --- HARDENED: Safety check ---
 
-                UI.card.style.setProperty('--light-hue', hue);
-                UI.intensity.style.setProperty('--thumb-border-color', `hsl(${hue},100%,50%)`);
-                UI.intensity.value = intensity;
-                UI.value.textContent = `${intensity}%`;
-                UI.colorSlider.value = hue;
-                SmartHub.UIUpdater.updateSliderBackground(UI.intensity, `hsl(${hue},100%,50%)`);
+            // --- NEW: Generalized updateLightUI function ---
+            _updateLightUI: function(state, UI) {
+                if (!UI || !UI.card) return;
+                const { intensity, hue } = state;
+                const isOn = intensity > 0;
+                const color = `hsl(${hue}, 100%, 50%)`;
                 
-                if (isOn) {
-                    UI.card.classList.add('border-blue-500');
-                    UI.icon.classList.add('icon-on');
-                } else {
-                    UI.card.classList.remove('border-blue-500');
-                    UI.icon.classList.remove('icon-on');
-                    UI.intensity.style.setProperty('--thumb-border-color', `#3b82f6`);
+                UI.card.style.setProperty('--light-hue', hue);
+                UI.intensity.style.setProperty('--thumb-border-color', isOn ? color : '#3b82f6');
+
+                UI.intensity.value = intensity;
+                UI.colorSlider.value = hue;
+                SmartHub.UIUpdater.updateSliderBackground(UI.intensity, color);
+                
+                if (UI.intensityTooltip) UI.intensityTooltip.textContent = `${intensity}%`;
+                if (UI.colorTooltip) {
+                    UI.colorTooltip.textContent = `Hue: ${hue}°`;
+                    UI.colorTooltip.style.backgroundColor = color;
                 }
+
+                if (isOn) {
+                    UI.card.classList.add('card-is-active');
+                    UI.icon.classList.add('icon-on');
+                    if (UI.statusText) UI.statusText.textContent = `${intensity}%`;
+                } else {
+                    UI.card.classList.remove('card-is-active');
+                    UI.icon.classList.remove('icon-on');
+                    if (UI.statusText) UI.statusText.textContent = "Off";
+                }
+                
                 UI.card.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+            },
+            
+            // --- NEW: Specific callers for each light ---
+            updateLivingLightUI: function() {
+                SmartHub.UIUpdater._updateLightUI(SmartHub.state.livingLight, SmartHub.UI.livingLight);
                 SmartHub.Persistence.saveState();
             },
+            updateBedLightUI: function() {
+                SmartHub.UIUpdater._updateLightUI(SmartHub.state.bedLight, SmartHub.UI.bedLight);
+                SmartHub.Persistence.saveState();
+            },
+
+            // --- (updateFanUI, updateThermostatUI, etc. are the same as before) ---
             updateFanUI: function() {
                 const { speed } = SmartHub.state.fan;
                 const isOn = speed > 0;
                 const UI = SmartHub.UI.fan;
-                if (!UI || !UI.card) return; // --- HARDENED: Safety check ---
-
+                if (!UI || !UI.card) return;
+                const color = `hsl(${UI.card.style.getPropertyValue('--fan-hue') || 200}, 100%, 50%)`;
                 UI.speed.value = speed;
-                UI.value.textContent = `Level ${speed}`;
-                SmartHub.UIUpdater.updateSliderBackground(UI.speed);
-                
-                // This now works because UI.icon is the correct <svg> element
+                UI.speed.style.setProperty('--thumb-border-color', isOn ? color : '#3b82f6');
+                SmartHub.UIUpdater.updateSliderBackground(UI.speed, color);
+                if (UI.speedTooltip) UI.speedTooltip.textContent = `Level ${speed}`;
                 if (isOn) {
-                    UI.card.classList.add('border-blue-500');
-                    UI.icon.classList.add('animate-spin');
+                    UI.card.classList.add('card-is-active');
+                    UI.icon.classList.add('icon-fan-on', 'animate-spin');
+                    if (UI.statusText) UI.statusText.textContent = `Level ${speed}`;
                     const duration = Math.max(0.5, 6 - speed); 
                     UI.icon.style.animationDuration = `${duration}s`;
                 } else {
-                    UI.card.classList.remove('border-blue-500');
-                    UI.icon.classList.remove('animate-spin');
+                    UI.card.classList.remove('card-is-active');
+                    UI.icon.classList.remove('icon-fan-on', 'animate-spin');
+                    if (UI.statusText) UI.statusText.textContent = "Off";
                     UI.icon.style.animationDuration = ``;
                 }
                 UI.card.setAttribute('aria-pressed', isOn ? 'true' : 'false');
@@ -966,30 +1140,26 @@ SmartHub.UI = {
             updateThermostatUI: function() {
                 const { temperature, mode } = SmartHub.state.thermostat;
                 const UI = SmartHub.UI.thermostat;
-                if (!UI || !UI.card) return; // --- HARDENED: Safety check ---
-
+                if (!UI || !UI.card) return;
                 UI.display.textContent = `${temperature}\u00B0`;
                 UI.modeDisplay.textContent = `Mode: ${mode}`;
-                // This now works because UI.icon is the correct <svg> element
                 UI.icon.classList.remove('text-red-500', 'text-blue-500', 'text-gray-500');
-                UI.card.classList.remove('border-red-500', 'border-blue-500');
-                
+                UI.card.classList.remove('card-active-red', 'card-active-blue');
                 UI.modeButtons.forEach(btn => {
                     btn.classList.remove('bg-gray-600', 'text-white');
                     const icon = btn.querySelector('i');
                     if (icon) { icon.classList.add('text-gray-500'); icon.classList.remove('text-red-500', 'text-blue-500', 'text-white'); }
                 });
-                
                 let activeBtn;
                 if (mode === 'Heat') { 
                     UI.icon.classList.add('text-red-500'); 
-                    UI.card.classList.add('border-red-500'); 
+                    UI.card.classList.add('card-active-red'); 
                     activeBtn = document.getElementById('temp-mode-heat'); 
                     if (activeBtn) activeBtn.querySelector('i').classList.add('text-red-500'); 
                 }
                 else if (mode === 'Cool') { 
                     UI.icon.classList.add('text-blue-500'); 
-                    UI.card.classList.add('border-blue-500'); 
+                    UI.card.classList.add('card-active-blue'); 
                     activeBtn = document.getElementById('temp-mode-cool'); 
                     if (activeBtn) activeBtn.querySelector('i').classList.add('text-blue-500'); 
                 }
@@ -999,61 +1169,59 @@ SmartHub.UI = {
                     if (activeBtn) activeBtn.querySelector('i').classList.add('text-white'); 
                 }
                 if (activeBtn) activeBtn.classList.add('bg-gray-600');
-                
                 SmartHub.Persistence.saveState();
             },
             updateLockUI: function() {
                 const { isLocked } = SmartHub.state.lock;
                 const UI = SmartHub.UI.lock;
-                if (!UI || !UI.card) return; // --- HARDENED: Safety check ---
-
-                // This now works because UI.iconLocked/Unlocked are the correct <svg> elements
+                if (!UI || !UI.card) return;
                 if (isLocked) {
                     UI.iconLocked.classList.remove('hidden');
                     UI.iconUnlocked.classList.add('hidden');
                     UI.button.textContent = 'Unlock';
                     UI.button.classList.add('bg-gray-700', 'hover:bg-gray-600');
                     UI.button.classList.remove('bg-green-600', 'hover:bg-green-500');
-                    UI.card.classList.remove('border-green-500');
+                    UI.card.classList.add('card-active-red');
+                    UI.card.classList.remove('card-active-green');
                 } else {
                     UI.iconLocked.classList.add('hidden');
                     UI.iconUnlocked.classList.remove('hidden');
                     UI.button.textContent = 'Lock';
                     UI.button.classList.remove('bg-gray-700', 'hover:bg-gray-600');
                     UI.button.classList.add('bg-green-600', 'hover:bg-green-500');
-                    UI.card.classList.add('border-green-500');
+                    UI.card.classList.remove('card-active-red');
+                    UI.card.classList.add('card-active-green');
                 }
                 SmartHub.Persistence.saveState();
             },
             updateSpeakerUI: function() {
                 const { isPlaying, volume, trackIndex } = SmartHub.state.speaker;
                 const UI = SmartHub.UI.speaker;
-                if (!UI || !UI.card) return; // --- HARDENED: Safety check ---
+                if (!UI || !UI.card) return; 
                 const trackName = (SmartHub.config.playlist[trackIndex] || 'Unknown track').split('/').pop().replace('.mp3', '');
-
                 UI.volume.value = volume;
                 UI.value.textContent = `${volume}%`;
-                SmartHub.UIUpdater.updateSliderBackground(UI.volume, '#3b82f6');
+                if (UI.volumeTooltip) UI.volumeTooltip.textContent = `${volume}%`;
+                SmartHub.UIUpdater.updateSliderBackground(UI.volume, '#a78bfa'); // Purple color
                 UI.playButton.setAttribute('aria-label', isPlaying ? 'Pause Music' : 'Play Music');
-
                 if (isPlaying) {
                     UI.playIcon.classList.add('hidden');
                     UI.pauseIcon.classList.remove('hidden');
-                    UI.icon.classList.add('text-blue-500');
-                    UI.card.classList.add('border-blue-500');
+                    UI.icon.classList.add('text-purple-400'); // Use same purple
+                    UI.card.classList.add('card-active-purple');
                     UI.trackTitle.textContent = `Playing: ${trackName}`;
-                    UI.nowIcon.classList.add('text-blue-500', 'glow-animate');
+                    UI.nowIcon.classList.add('text-purple-400', 'glow-animate');
                     UI.nowText.textContent = 'Now Playing';
-                    UI.nowText.classList.add('text-blue-400');
+                    UI.nowText.classList.add('text-purple-300');
                 } else {
                     UI.playIcon.classList.remove('hidden');
                     UI.pauseIcon.classList.add('hidden');
-                    UI.icon.classList.remove('text-blue-500');
-                    UI.card.classList.remove('border-blue-500');
+                    UI.icon.classList.remove('text-purple-400');
+                    UI.card.classList.remove('card-active-purple');
                     UI.trackTitle.textContent = SmartHub.UI.audioElement && SmartHub.UI.audioElement.src ? `Paused: ${trackName}` : 'Paused';
-                    UI.nowIcon.classList.remove('text-blue-500', 'glow-animate');
+                    UI.nowIcon.classList.remove('text-purple-400', 'glow-animate');
                     UI.nowText.textContent = 'Idle';
-                    UI.nowText.classList.remove('text-blue-400');
+                    UI.nowText.classList.remove('text-purple-300');
                 }
                 SmartHub.Persistence.saveState();
             },
@@ -1064,8 +1232,35 @@ SmartHub.UI = {
                 const key = SmartHub.state.activeScene;
                 if (key && SmartHub.UI.scenes[key]) SmartHub.UI.scenes[key].classList.add('active');
             },
+
+            // --- NEW: Room Filtering Function ---
+            filterDevicesByRoom: function() {
+                const newRoom = SmartHub.state.currentRoom;
+                const UI = SmartHub.UI.room;
+                
+                // Update Tab active states
+                UI.tabs.forEach(tab => {
+                    if (tab.dataset.room === newRoom) {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                });
+
+                // Filter device cards
+                UI.allDevices.forEach(card => {
+                    const cardRoom = card.dataset.room;
+                    if (newRoom === 'all' || cardRoom === 'all' || cardRoom === newRoom) {
+                        card.classList.remove('device-hidden');
+                    } else {
+                        card.classList.add('device-hidden');
+                    }
+                });
+            },
+
             updateAllUIs: function() {
-                this.updateLightUI();
+                this.updateLivingLightUI(); // UPDATED
+                this.updateBedLightUI();     // UPDATED
                 this.updateFanUI();
                 this.updateThermostatUI();
                 this.updateLockUI();
@@ -1080,23 +1275,41 @@ SmartHub.UI = {
                 const UI = SmartHub.UI;
                 const Handlers = SmartHub.EventHandlers;
 
-                // --- HARDENED: All handlers are now wrapped in safety checks ---
-                if (UI.light.card) {
-                    UI.light.card.addEventListener('click', Handlers.lightCardClickHandler);
-                    UI.light.card.addEventListener('keydown', (e) => Handlers.handleCardKeyPress(e, Handlers.lightCardClickHandler));
-                    UI.light.intensity.addEventListener('input', (e) => {
+                // --- NEW: Living Room Light ---
+                if (UI.livingLight.card) {
+                    UI.livingLight.card.addEventListener('click', (e) => Handlers.lightCardClickHandler(e, 'livingLight'));
+                    UI.livingLight.card.addEventListener('keydown', (e) => Handlers.handleCardKeyPress(e, (e) => Handlers.lightCardClickHandler(e, 'livingLight')));
+                    UI.livingLight.intensity.addEventListener('input', (e) => {
                         const newValue = Number(e.target.value);
-                        SmartHub.state.light.intensity = newValue;
-                        if (newValue > 0) { SmartHub.state.light.lastKnownIntensity = newValue; }
-                        SmartHub.UIUpdater.updateLightUI();
+                        SmartHub.state.livingLight.intensity = newValue;
+                        if (newValue > 0) { SmartHub.state.livingLight.lastKnownIntensity = newValue; }
+                        SmartHub.UIUpdater.updateLivingLightUI();
                     });
-                    UI.light.colorSlider.addEventListener('input', (e) => { 
-                        SmartHub.state.light.hue = e.target.value; 
-                        if (SmartHub.state.light.intensity === 0) { SmartHub.state.light.intensity = SmartHub.state.light.lastKnownIntensity; }
-                        SmartHub.UIUpdater.updateLightUI(); 
+                    UI.livingLight.colorSlider.addEventListener('input', (e) => { 
+                        SmartHub.state.livingLight.hue = e.target.value; 
+                        if (SmartHub.state.livingLight.intensity === 0) { SmartHub.state.livingLight.intensity = SmartHub.state.livingLight.lastKnownIntensity; }
+                        SmartHub.UIUpdater.updateLivingLightUI(); 
+                    });
+                }
+                
+                // --- NEW: Bedroom Light ---
+                if (UI.bedLight.card) {
+                    UI.bedLight.card.addEventListener('click', (e) => Handlers.lightCardClickHandler(e, 'bedLight'));
+                    UI.bedLight.card.addEventListener('keydown', (e) => Handlers.handleCardKeyPress(e, (e) => Handlers.lightCardClickHandler(e, 'bedLight')));
+                    UI.bedLight.intensity.addEventListener('input', (e) => {
+                        const newValue = Number(e.target.value);
+                        SmartHub.state.bedLight.intensity = newValue;
+                        if (newValue > 0) { SmartHub.state.bedLight.lastKnownIntensity = newValue; }
+                        SmartHub.UIUpdater.updateBedLightUI();
+                    });
+                    UI.bedLight.colorSlider.addEventListener('input', (e) => { 
+                        SmartHub.state.bedLight.hue = e.target.value; 
+                        if (SmartHub.state.bedLight.intensity === 0) { SmartHub.state.bedLight.intensity = SmartHub.state.bedLight.lastKnownIntensity; }
+                        SmartHub.UIUpdater.updateBedLightUI(); 
                     });
                 }
 
+                // --- (Fan, Thermostat, Lock, Speaker handlers are the same) ---
                 if (UI.fan.card) {
                     UI.fan.card.addEventListener('click', Handlers.fanCardClickHandler);
                     UI.fan.card.addEventListener('keydown', (e) => Handlers.handleCardKeyPress(e, Handlers.fanCardClickHandler));
@@ -1107,7 +1320,6 @@ SmartHub.UI = {
                         SmartHub.UIUpdater.updateFanUI();
                     });
                 }
-
                 if (UI.thermostat.tempUp) {
                     UI.thermostat.tempUp.addEventListener('click', () => { SmartHub.state.thermostat.temperature++; SmartHub.UIUpdater.updateThermostatUI(); });
                     UI.thermostat.tempDown.addEventListener('click', () => { SmartHub.state.thermostat.temperature--; SmartHub.UIUpdater.updateThermostatUI(); });
@@ -1119,11 +1331,9 @@ SmartHub.UI = {
                         } 
                     });
                 }
-
                 if (UI.lock.button) {
                     UI.lock.button.addEventListener('click', () => { SmartHub.state.lock.isLocked = !SmartHub.state.lock.isLocked; SmartHub.UIUpdater.updateLockUI(); });
                 }
-
                 if (UI.speaker.volume) {
                     UI.speaker.volume.addEventListener('input', (e) => SmartHub.AudioPlayer.setVolume(Number(e.target.value)));
                     UI.speaker.playButton.addEventListener('click', (e) => {
@@ -1138,10 +1348,10 @@ SmartHub.UI = {
                     UI.speaker.prevButton.addEventListener('click', (e) => { e.stopPropagation(); SmartHub.AudioPlayer.prev(); });
                 }
 
+                // --- (Scene, Modal, Ripple, Voice handlers are the same) ---
                 Object.values(UI.scenes).forEach(button => { 
                     if (button) button.addEventListener('click', (e) => Handlers.runScene(e.currentTarget.dataset.scene)); 
                 });
-
                 if (UI.addDeviceCard) {
                     UI.addDeviceCard.addEventListener('click', SmartHub.Modal.open);
                     UI.addDeviceCard.addEventListener('keydown', (e) => Handlers.handleCardKeyPress(e, SmartHub.Modal.open));
@@ -1150,28 +1360,66 @@ SmartHub.UI = {
                     UI.modal.closeButton.addEventListener('click', SmartHub.Modal.close);
                     UI.modal.overlay.addEventListener('click', SmartHub.Modal.close);
                 }
-
                 document.querySelectorAll(".ripple-button").forEach(button => {
                     button.addEventListener("click", SmartHub.Effects.createRipple);
                 });
-
                 if (UI.voice.micButton) {
                     UI.voice.micButton.addEventListener('click', () => SmartHub.Speech.toggleListen());
                 }
+
+                // --- NEW: Room Tab Click Handler ---
+                if (UI.room.tabContainer) {
+                    UI.room.tabContainer.addEventListener('click', (e) => {
+                        const button = e.target.closest('.room-tab-button');
+                        if (button && button.dataset.room) {
+                            SmartHub.state.currentRoom = button.dataset.room;
+                            SmartHub.UIUpdater.filterDevicesByRoom();
+                        }
+                    });
+                }
             },
 
-            lightCardClickHandler: function(e) {
-                if (e.target.type === 'range') return;
-                if (SmartHub.state.light.intensity > 0) {
-                    SmartHub.state.light.intensity = 0;
+            // --- REWRITTEN: Generalized lightCardClickHandler ---
+            lightCardClickHandler: function(e, lightKey) {
+                if (e.target.closest('.collapsible-controls')) return;
+                
+                const state = SmartHub.state[lightKey];
+                const updater = lightKey === 'livingLight' ? SmartHub.UIUpdater.updateLivingLightUI : SmartHub.UIUpdater.updateBedLightUI;
+
+                if (state.intensity > 0) {
+                    state.intensity = 0;
                 } else {
-                    SmartHub.state.light.intensity = SmartHub.state.light.lastKnownIntensity;
+                    state.intensity = state.lastKnownIntensity;
                 }
-                SmartHub.UIUpdater.updateLightUI();
+                updater();
             },
+            
+            // --- NEW: Helper for voice commands ---
+            handleLightCommand: function(command, lightKey) {
+                const state = SmartHub.state[lightKey];
+                const parser = SmartHub.Speech.parseNumber;
+                const colorMap = SmartHub.config.colorMap;
+                
+                const colorWord = Object.keys(colorMap).find(c => command.includes(c));
+                const intensity = parser(command);
+                const lightName = lightKey === 'livingLight' ? 'Living Room light' : 'Bedroom light';
+
+                if (colorWord) {
+                    state.hue = colorMap[colorWord];
+                    if (state.intensity === 0) state.intensity = state.lastKnownIntensity;
+                    SmartHub.Speech.showStatus(`Set ${lightName} color to ${colorWord}.`);
+                } else if (intensity !== null && intensity >= 0 && intensity <= 100) {
+                    state.intensity = intensity;
+                    if (intensity > 0) state.lastKnownIntensity = intensity;
+                    SmartHub.Speech.showStatus(`Set ${lightName} intensity to ${intensity}%.`);
+                } else {
+                    SmartHub.Speech.showStatus("Didn't catch that. Try 'set light to 50%' or 'set light to blue'.");
+                }
+            },
+
 
             fanCardClickHandler: function(e) {
-                if (e.target.type === 'range') return;
+                if (e.target.closest('.collapsible-controls')) return;
                 if (SmartHub.state.fan.speed > 0) {
                     SmartHub.state.fan.speed = 0;
                 } else {
@@ -1196,6 +1444,7 @@ SmartHub.UI = {
                 SmartHub.state.activeScene = sceneName;
                 if (scene.updates) {
                     for (const key in scene.updates) {
+                        // Check for both 'light' (old) and specific lights
                         if (SmartHub.state[key]) {
                             Object.assign(SmartHub.state[key], scene.updates[key]);
                         }
@@ -1216,10 +1465,10 @@ SmartHub.UI = {
             }
         },
         
-        // --- 10. Modal Module ---
+        // --- 10. Modal Module (Unchanged) ---
         Modal: {
             open: function() {
-                if (!SmartHub.UI.modal.overlay) return; // Safety check
+                if (!SmartHub.UI.modal.overlay) return; 
                 SmartHub.UI.modal.overlay.classList.remove('modal-hidden');
                 SmartHub.UI.modal.box.classList.remove('modal-hidden');
                 try {
@@ -1231,43 +1480,49 @@ SmartHub.UI = {
                 } catch (e) {
                     console.error("Failed to create modal icons:", e);
                 }
+                setTimeout(() => {
+                    SmartHub.UI.modal.overlay.classList.add('active');
+                    SmartHub.UI.modal.box.classList.add('active');
+                }, 10);
             },
             close: function() {
-                if (!SmartHub.UI.modal.overlay) return; // Safety check
-                SmartHub.UI.modal.overlay.classList.add('modal-hidden');
-                SmartHub.UI.modal.box.classList.add('modal-hidden');
+                if (!SmartHub.UI.modal.overlay) return;
+                SmartHub.UI.modal.overlay.classList.remove('active');
+                SmartHub.UI.modal.box.classList.remove('active');
+                setTimeout(() => {
+                    SmartHub.UI.modal.overlay.classList.add('modal-hidden');
+                    SmartHub.UI.modal.box.classList.add('modal-hidden');
+                }, 300);
             }
         },
 
-        // --- 11. Effects Module ---
+        // --- 11. Effects Module (Unchanged) ---
         Effects: {
             createRipple: function(event) {
                 const button = event.currentTarget;
                 if (!button) return;
                 const oldRipple = button.querySelector(".ripple");
                 if (oldRipple) { oldRipple.remove(); }
-
                 const circle = document.createElement("span");
                 const diameter = Math.max(button.clientWidth, button.clientHeight);
                 const radius = diameter / 2;
                 const rect = button.getBoundingClientRect();
-                
                 circle.style.width = circle.style.height = `${diameter}px`;
                 circle.style.left = `${event.clientX - rect.left - radius}px`;
                 circle.style.top = `${event.clientY - rect.top - radius}px`;
                 circle.classList.add("ripple");
-                
                 button.appendChild(circle);
             }
         },
         
         // --- 12. Speech Recognition & TTS Module ---
         Speech: {
-            recognition: null,
+            // ... (All speech functions are the same, but processCommand is now smarter)
+             recognition: null,
             init: function() {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (!SpeechRecognition) {
-                    if (SmartHub.UI.voice && SmartHub.UI.voice.statusMessage) { // Safety check
+                    if (SmartHub.UI.voice && SmartHub.UI.voice.statusMessage) { 
                         this.showStatus("Speech recognition not supported.", 4000, false); 
                         if (SmartHub.UI.voice.micButton) {
                             SmartHub.UI.voice.micButton.disabled = true;
@@ -1382,35 +1637,26 @@ SmartHub.UI = {
         }
     };
     
-    // This part from your old file is redundant because
-    // SmartHub.HeaderDisplay.updateClock() already does this.
-    // I've left it in since you provided it, but the new
-    // modular code inside SmartHub handles it better.
+    // Clock/Date functions (unchanged)
     function updateClockAndDate() {
         const now = new Date();
-
         const dateStr = now.toLocaleDateString(undefined, {
           weekday: "long",
           year: "numeric",
           month: "long",
           day: "numeric"
         });
-
         const timeStr = now.toLocaleTimeString(undefined, { hour12: true });
-
         const dateEl = document.getElementById("date-display");
         const timeEl = document.getElementById("time-display");
         const ampmEl = document.getElementById("ampm-display");
-
         if (dateEl) dateEl.textContent = dateStr;
-
         if (timeEl && ampmEl) {
           const [time, ampm] = timeStr.split(" ");
           timeEl.textContent = time;
           ampmEl.textContent = ampm || "";
         }
       }
-
       updateClockAndDate();
       setInterval(updateClockAndDate, 1000);
     </script>
