@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Smart Home Hub - Room UI</title> 
+    <title>Smart Home Hub </title> 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 
@@ -14,25 +14,28 @@
             --fan-hue: 200;   /* Default fan hue (cyan) */
         }
 
-        /* --- Custom Scrollbar --- */
+        /* --- Custom Scrollbar (Light Theme) --- */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #1f2937; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        ::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 10px; } /* gray-100 */
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 10px; } /* gray-400 */
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; } /* gray-500 */
 
-        /* --- Dynamic Background --- */
+        /* --- Dynamic Background (Light Theme) --- */
         body {
-            background-image: radial-gradient(circle at 10% 20%, rgb(30, 41, 59) 0%, rgb(17, 24, 39) 90%);
+            /* Light default: white to gray-100 */
+            background-image: radial-gradient(circle at 10% 20%, rgb(255, 255, 255) 0%, rgb(243, 244, 246) 90%);
             transition: background-image 1s linear;
         }
-        body.theme-morning { background-image: radial-gradient(circle at 10% 20%, rgb(90, 107, 136) 0%, rgb(45, 58, 74) 90%); }
-        body.theme-evening { background-image: radial-gradient(circle at 10% 20%, rgb(71, 39, 78) 0%, rgb(28, 25, 44) 90%); }
-        body.theme-night { background-image: radial-gradient(circle at 10% 20%, rgb(28, 30, 48) 0%, rgb(10, 10, 20) 90%); }
+        /* These dynamic themes are fine, they will override the default light theme as intended */
+        body.theme-morning { background-image: radial-gradient(circle at 10% 20%, rgb(222, 230, 240) 0%, rgb(240, 243, 247) 90%); } /* Lighter morning */
+        body.theme-evening { background-image: radial-gradient(circle at 10% 20%, rgb(240, 230, 242) 0%, rgb(220, 218, 230) 90%); } /* Lighter evening */
+        body.theme-night { background-image: radial-gradient(circle at 10% 20%, rgb(200, 202, 215) 0%, rgb(190, 190, 200) 90%); } /* "Night light" theme */
 
-        /* --- Sliders --- */
+        /* --- Sliders (Light Theme) --- */
         input[type="range"] {
             -webkit-appearance: none; appearance: none; width: 100%; height: 8px;
-            background-color: #374151; border-radius: 8px; outline: none;
+            background-color: #d1d5db; /* gray-300 */
+            border-radius: 8px; outline: none;
             transition: background 0.2s ease;
         }
         input[type="range"]::-webkit-slider-thumb {
@@ -41,11 +44,13 @@
             border: 3px solid var(--thumb-border-color);
             cursor: pointer; margin-top: -6px;
             transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Added subtle shadow */
         }
         input[type="range"]::-moz-range-thumb {
             width: 20px; height: 20px; background-color: white; border-radius: 50%;
             border: 3px solid var(--thumb-border-color);
             cursor: pointer; transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Added subtle shadow */
         }
         input[type="range"].color-slider {
             background: linear-gradient(to right,
@@ -58,27 +63,41 @@
         .ripple {
             position: absolute; border-radius: 50%;
             transform: scale(0); animation: ripple 0.6s linear;
-            background-color: rgba(255, 255, 255, 0.4);
+            background-color: rgba(0, 0, 0, 0.2); /* Darker ripple for light theme */
             pointer-events: none;
         }
         @keyframes ripple { to { transform: scale(4); opacity: 0; } }
 
-        /* --- Buttons --- */
+        /* --- Buttons (Light Theme) --- */
         .temp-button {
-            width: 3rem; height: 3rem; border-radius: 9999px; background-color: #374151; color: white;
+            width: 3rem; height: 3rem; border-radius: 9999px; 
+            background-color: #e5e7eb; /* gray-200 */
+            color: #1f2937; /* gray-800 */
             display: flex; align-items: center; justify-content: center; font-size: 1.875rem; font-weight: bold;
             transition: all 150ms;
         }
-        .temp-button:active { background-color: #4B5563; transform: scale(0.95); }
+        .temp-button:active { background-color: #d1d5db; transform: scale(0.95); } /* gray-300 */
 
         .scene-button { 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 1rem; border-radius: .5rem; background-color: rgba(31,41,55,0.7);
-            border: 1px solid rgba(55,65,81,0.5); backdrop-filter: blur(8px); color: #D1D5DB; transition: 200ms;
+            padding: 1rem; border-radius: .5rem; 
+            background-color: rgba(255,255,255,0.7); /* white/70 */
+            border: 1px solid rgba(209,213,219,0.5); /* border-gray-300/50 */
+            backdrop-filter: blur(8px); 
+            color: #374151; /* text-gray-700 */
+            transition: 200ms;
             position: relative; overflow: hidden;
         }
-        .scene-button:hover { background-color: rgba(55,65,81,0.8); color:white; }
-        .scene-button.active { background-color: rgba(37,99,235,0.9); color:white; border-color:#3B82F6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .scene-button:hover { 
+            background-color: rgba(243,244,246,0.8); /* bg-gray-100/80 */
+            color: #111827; /* text-gray-900 */
+        }
+        .scene-button.active { 
+            background-color: rgba(37,99,235,0.9); 
+            color: white; 
+            border-color:#3B82F6; 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); 
+        }
 
         /* --- Icons --- */
         .icon-on { color: hsl(var(--light-hue,60),100%,50%); filter: drop-shadow(0 0 8px hsl(var(--light-hue,60),100%,50%)); }
@@ -93,11 +112,11 @@
         }
         .glow-animate { animation: glow 1.5s infinite; }
 
-        /* --- Device Card --- */
+        /* --- Device Card (Light Theme) --- */
         .device-card {
-            background-color: rgba(31, 41, 55, 0.7); /* bg-gray-800/70 */
+            background-color: rgba(255, 255, 255, 0.7); /* bg-white/70 */
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(55, 65, 81, 0.5); /* border-gray-700/50 */
+            border: 1px solid rgba(209, 213, 219, 0.5); /* border-gray-300/50 */
             border-radius: 0.75rem; /* rounded-xl */
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); /* shadow-lg */
             padding: 1.5rem; /* p-6 */
@@ -111,7 +130,7 @@
         }
         .device-card:hover:not(.card-is-active):not(:has(input:focus)):not(:has(button:focus)) {
             transform: translateY(-4px) scale(1.02);
-            border-color: rgba(107, 114, 128, 0.7);
+            border-color: rgba(156, 163, 175, 0.7); /* gray-400/70 */
         }
 
         /* NEW: Hidden state for device filtering */
@@ -154,9 +173,10 @@
         }
         .card-status-text {
             transition: color 0.3s ease;
+            color: #6b7280; /* text-gray-500 */
         }
         .card-is-active .card-status-text {
-            color: white;
+            color: #111827; /* text-gray-900 */
             font-weight: 600;
         }
 
@@ -171,14 +191,14 @@
         }
         /* --- End New Styles --- */
 
-        /* --- Add Device Button --- */
+        /* --- Add Device Button (Light Theme) --- */
         @keyframes pulse-border {
-            0%, 100% { border-color: rgba(107, 114, 128, 0.7); }
+            0%, 100% { border-color: rgba(156, 163, 175, 0.7); } /* gray-400/70 */
             50% { border-color: rgba(59, 130, 246, 0.9); }
         }
         #add-device-button { animation: pulse-border 2.5s infinite; }
 
-        /* --- Modal --- */
+        /* --- Modal (Light Theme) --- */
         .modal-hidden { display: none; }
         #modal-overlay {
             position: fixed; inset: 0;
@@ -189,9 +209,11 @@
         #modal-box {
             position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%) scale(0.95);
-            background-color: #1f2937; color: white;
-            border-radius: 0.75rem; border: 1px solid #4b5563;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            background-color: #ffffff; /* white */
+            color: #1f2937; /* gray-800 */
+            border-radius: 0.75rem; 
+            border: 1px solid #d1d5db; /* gray-300 */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
             padding: 1.5rem; width: 90%; max-width: 512px;
             opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; z-index: 50;
         }
@@ -212,19 +234,19 @@
             opacity: 1; bottom: 40px;
         }
 
-        /* --- NEW: Room Tab Button --- */
+        /* --- NEW: Room Tab Button (Light Theme) --- */
         .room-tab-button {
             padding: 0.5rem 1.25rem;
             border-radius: 9999px;
             font-weight: 500;
-            color: #9ca3af; /* text-gray-400 */
+            color: #4b5563; /* text-gray-600 */
             background-color: transparent;
-            border: 1px solid #374151; /* border-gray-700 */
+            border: 1px solid #d1d5db; /* border-gray-300 */
             transition: all 0.2s ease;
         }
         .room-tab-button:hover {
-            color: white;
-            background-color: #374151; /* bg-gray-700 */
+            color: #111827; /* text-gray-900 */
+            background-color: #e5e7eb; /* bg-gray-200 */
         }
         .room-tab-button.active {
             color: white;
@@ -234,25 +256,25 @@
 
     </style>
 </head>
-<body class="bg-gray-900 text-white font-sans antialiased min-h-screen flex flex-col">
+<body class="bg-gray-100 text-gray-900 font-sans antialiased min-h-screen flex flex-col">
 
     <main class="flex-grow p-4 md:p-8">
         <header class="mb-8 flex justify-between items-center max-w-7xl mx-auto">
             <div>
                 <h1 class="text-3xl md:text-4xl font-bold">Smart Hub</h1>
-                <p id="date-display" class="text-lg text-gray-400">Loading date...</p>
+                <p id="date-display" class="text-lg text-gray-600">Loading date...</p>
             </div>
              <div class="text-right flex items-center gap-4">
                 <div class="flex gap-3 justify-end items-center">
                     <i data-lucide="cloud-sun" class="w-10 h-10 text-yellow-400" id="weather-icon"></i>
                     <div>
                         <div id="weather-temp" class="text-2xl font-bold">75&deg;F</div>
-                        <div id="weather-desc" class="text-sm text-gray-400">Partly Cloudy</div>
+                        <div id="weather-desc" class="text-sm text-gray-600">Partly Cloudy</div>
                     </div>
                 </div>
                 <div>
                     <div id="time-display" class="text-3xl md:text-4xl font-bold">--:--:--</div>
-                    <div id="ampm-display" class="text-lg text-gray-400">&nbsp;</div>
+                    <div id="ampm-display" class="text-lg text-gray-600">&nbsp;</div>
                 </div>
             </div>
         </header>
@@ -308,20 +330,20 @@
                         <i id="living-light-icon" data-lucide="lightbulb" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
                         <h2 class="text-2xl font-semibold">Living Room Light</h2>
                     </div>
-                    <span id="living-light-status-text" class="text-lg font-medium text-gray-400 card-status-text">Off</span>
+                    <span id="living-light-status-text" class="text-lg font-medium card-status-text">Off</span>
                 </div>
 
                 <div class="collapsible-controls">
                     <div class="space-y-3">
                         <div class="space-y-3 transition-opacity duration-300">
-                            <label for="living-light-intensity" class="block text-sm font-medium text-gray-400">Intensity</label>
+                            <label for="living-light-intensity" class="block text-sm font-medium text-gray-600">Intensity</label>
                             <div class="slider-container relative">
                                 <input type="range" id="living-light-intensity" min="0" max="100" value="50" class="w-full" aria-label="Light intensity">
                                 <div id="living-light-intensity-tooltip" class="slider-tooltip">50%</div>
                             </div>
                         </div>
                         <div class="space-y-3 mt-4 transition-opacity duration-300">
-                            <label for="living-light-color" class="block text-sm font-medium text-gray-400">Color</label>
+                            <label for="living-light-color" class="block text-sm font-medium text-gray-600">Color</label>
                             <div class="slider-container relative">
                                 <input type="range" id="living-light-color" min="0" max="360" value="200" class="w-full color-slider" aria-label="Light color">
                                 <div id="living-light-color-tooltip" class="slider-tooltip" style="background-color: hsl(200, 100%, 50%)">Hue: 200°</div>
@@ -341,20 +363,20 @@
                         <i id="bed-light-icon" data-lucide="lightbulb" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
                         <h2 class="text-2xl font-semibold">Bedroom Light</h2>
                     </div>
-                    <span id="bed-light-status-text" class="text-lg font-medium text-gray-400 card-status-text">Off</span>
+                    <span id="bed-light-status-text" class="text-lg font-medium card-status-text">Off</span>
                 </div>
 
                 <div class="collapsible-controls">
                     <div class="space-y-3">
                         <div class="space-y-3 transition-opacity duration-300">
-                            <label for="bed-light-intensity" class="block text-sm font-medium text-gray-400">Intensity</label>
+                            <label for="bed-light-intensity" class="block text-sm font-medium text-gray-600">Intensity</label>
                             <div class="slider-container relative">
                                 <input type="range" id="bed-light-intensity" min="0" max="100" value="50" class="w-full" aria-label="Light intensity">
                                 <div id="bed-light-intensity-tooltip" class="slider-tooltip">50%</div>
                             </div>
                         </div>
                         <div class="space-y-3 mt-4 transition-opacity duration-300">
-                            <label for="bed-light-color" class="block text-sm font-medium text-gray-400">Color</label>
+                            <label for="bed-light-color" class="block text-sm font-medium text-gray-600">Color</label>
                             <div class="slider-container relative">
                                 <input type="range" id="bed-light-color" min="0" max="360" value="30" class="w-full color-slider" aria-label="Light color">
                                 <div id="bed-light-color-tooltip" class="slider-tooltip" style="background-color: hsl(30, 100%, 50%)">Hue: 30°</div>
@@ -372,13 +394,13 @@
                         <i id="fan-icon" data-lucide="fan" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
                         <h2 class="text-2xl font-semibold">Bedroom Fan</h2>
                     </div>
-                    <span id="fan-status-text" class="text-lg font-medium text-gray-400 card-status-text">Off</span>
+                    <span id="fan-status-text" class="text-lg font-medium card-status-text">Off</span>
                 </div>
                 
                 <div class="collapsible-controls">
                     <div class="space-y-3">
                         <div class="space-y-3 transition-opacity duration-300">
-                            <label for="fan-speed" class="block text-sm font-medium text-gray-400">Speed</label>
+                            <label for="fan-speed" class="block text-sm font-medium text-gray-600">Speed</label>
                             <div class="slider-container relative">
                                 <input type="range" id="fan-speed" min="0" max="5" value="2" step="1" class="w-full" aria-label="Fan speed">
                                 <div id="fan-speed-tooltip" class="slider-tooltip">Level 2</div>
@@ -398,14 +420,14 @@
                     <button id="temp-down" class="temp-button ripple-button" aria-label="Temperature Down">-</button>
                     <div class="text-center">
                         <div id="temp-display" class="text-6xl font-bold">68&deg;</div>
-                        <div id="temp-mode-display" class="text-lg text-gray-400">Off</div>
+                        <div id="temp-mode-display" class="text-lg text-gray-600">Off</div>
                     </div>
                     <button id="temp-up" class="temp-button ripple-button" aria-label="Temperature Up">+</button>
                 </div>
                 <div id="temp-mode-container" class="flex justify-around mt-4">
-                    <button id="temp-mode-heat" class="temp-mode-button ripple-button p-2 rounded-lg" data-mode="Heat" aria-label="Set Heat Mode"><i data-lucide="flame" class="w-6 h-6 text-gray-500 pointer-events-none transition-colors"></i></button>
-                    <button id="temp-mode-cool" class="temp-mode-button ripple-button p-2 rounded-lg" data-mode="Cool" aria-label="Set Cool Mode"><i data-lucide="snowflake" class="w-6 h-6 text-gray-500 pointer-events-none transition-colors"></i></button>
-                    <button id="temp-mode-off" class="temp-mode-button ripple-button p-2 rounded-lg bg-gray-600" data-mode="Off" aria-label="Set Mode Off"><i data-lucide="power" class="w-6 h-6 text-white pointer-events-none transition-colors"></i></button>
+                    <button id="temp-mode-heat" class="temp-mode-button ripple-button p-2 rounded-lg border-2 border-transparent" data-mode="Heat" aria-label="Set Heat Mode"><i data-lucide="flame" class="w-6 h-6 text-gray-600 pointer-events-none transition-colors"></i></button>
+                    <button id="temp-mode-cool" class="temp-mode-button ripple-button p-2 rounded-lg border-2 border-transparent" data-mode="Cool" aria-label="Set Cool Mode"><i data-lucide="snowflake" class="w-6 h-6 text-gray-600 pointer-events-none transition-colors"></i></button>
+                    <button id="temp-mode-off" class="temp-mode-button ripple-button p-2 rounded-lg border-2 border-transparent" data-mode="Off" aria-label="Set Mode Off"><i data-lucide="power" class="w-6 h-6 text-gray-600 pointer-events-none transition-colors"></i></button>
                 </div>
             </div>
 
@@ -417,7 +439,7 @@
                         <h2 class="text-2xl font-semibold">Front Door</h2>
                     </div>
                 </div>
-                <button id="lock-toggle-button" class="w-full h-24 rounded-lg text-2xl font-semibold transition-colors duration-200 ripple-button bg-gray-700 hover:bg-gray-600">
+                <button id="lock-toggle-button" class="w-full h-24 rounded-lg text-2xl font-semibold transition-colors duration-200 ripple-button bg-gray-200 hover:bg-gray-300">
                     Unlock
                 </button>
             </div>
@@ -430,7 +452,7 @@
                     </div>
                 </div>
                 <div id="speaker-controls" class="space-y-3">
-                    <label for="speaker-volume" class="block text-sm font-medium text-gray-400">Volume</label>
+                    <label for="speaker-volume" class="block text-sm font-medium text-gray-600">Volume</label>
                     <div class="slider-container relative">
                         <input type="range" id="speaker-volume" min="0" max="100" value="30" class="w-full" aria-label="Speaker volume">
                         <div class="slider-tooltip" id="speaker-volume-tooltip">30%</div>
@@ -438,25 +460,25 @@
                     <div id="speaker-volume-value" class="text-center text-lg font-medium">30%</div>
                 </div>
                 <div class="mt-4 text-center">
-                    <div id="track-title" class="text-lg text-gray-300 mb-2 h-6 truncate">Paused</div>
-                    <div class="relative w-full h-1 bg-gray-700 rounded-full my-3 group cursor-pointer" id="progress-bar-container">
+                    <div id="track-title" class="text-lg text-gray-700 mb-2 h-6 truncate">Paused</div>
+                    <div class="relative w-full h-1 bg-gray-300 rounded-full my-3 group cursor-pointer" id="progress-bar-container">
                         <div id="track-progress" class="absolute h-1 bg-purple-500 rounded-full" style="width: 0%;"></div>
                     </div>
-                    <div class="flex justify-between text-xs text-gray-400">
+                    <div class="flex justify-between text-xs text-gray-600">
                         <span id="track-current-time">0:00</span>
                         <span id="track-duration">0:00</span>
                     </div>
                     <div class="flex justify-center items-center space-x-4 mt-2">
-                        <button id="prev-track" class="p-3 rounded-full bg-gray-700 hover:bg-gray-600 transition-all shadow-md hover:scale-110 ripple-button" aria-label="Previous Track"><i data-lucide="skip-back" class="w-6 h-6 pointer-events-none"></i></button>
+                        <button id="prev-track" class="p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-all shadow-md hover:scale-110 ripple-button" aria-label="Previous Track"><i data-lucide="skip-back" class="w-6 h-6 pointer-events-none"></i></button>
                         <button id="play-pause" class="p-4 rounded-full bg-blue-600 hover:bg-blue-700 transition-all transform hover:scale-110 shadow-lg ripple-button" aria-label="Play Music">
                             <i id="play-icon" data-lucide="play" class="w-7 h-7 pointer-events-none"></i>
                             <i id="pause-icon" data-lucide="pause" class="w-7 h-7 pointer-events-none hidden"></i>
                         </button>
-                        <button id="next-track" class="p-3 rounded-full bg-gray-700 hover:bg-gray-600 transition-all shadow-md hover:scale-110 ripple-button" aria-label="Next Track"><i data-lucide="skip-forward" class="w-6 h-6 pointer-events-none"></i></button>
+                        <button id="next-track" class="p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-all shadow-md hover:scale-110 ripple-button" aria-label="Next Track"><i data-lucide="skip-forward" class="w-6 h-6 pointer-events-none"></i></button>
                     </div>
                     <div class="mt-3 flex justify-center items-center space-x-2">
-                        <i id="now-playing-icon" data-lucide="radio" class="w-5 h-5 text-gray-500 transition-all duration-300" style="--glow-color: #a78bfa;"></i>
-                        <span id="now-playing-text" class="text-sm text-gray-400">Idle</span>
+                        <i id="now-playing-icon" data-lucide="radio" class="w-5 h-5 text-gray-600 transition-all duration-300" style="--glow-color: #a78bfa;"></i>
+                        <span id="now-playing-text" class="text-sm text-gray-600">Idle</span>
                     </div>
                 </div>
             </div>
@@ -475,11 +497,11 @@
         <div id="modal-box" class="modal-hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-semibold">Add New Device</h2>
-                <button id="modal-close-button" class="p-1 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white ripple-button" aria-label="Close modal">
+                <button id="modal-close-button" class="p-1 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-900 ripple-button" aria-label="Close modal">
                     <i data-lucide="x" class="w-6 h-6 pointer-events-none"></i>
                 </button>
             </div>
-            <p class="text-gray-300 mb-6">Select a device type to add to your hub. (This is a demo, no new device will be added).</p>
+            <p class="text-gray-700 mb-6">Select a device type to add to your hub. (This is a demo, no new device will be added).</p>
             <div class="grid grid-cols-2 gap-4">
                 <button class="scene-button ripple-button" aria-label="Add smart light">
                     <i data-lucide="lightbulb" class="mb-2"></i><span>Smart Light</span>
@@ -497,21 +519,21 @@
         </div>
     </main>
 
-    <footer class="sticky bottom-0 bg-gray-900/80 backdrop-blur-md p-4 w-full border-t border-gray-700/50 z-20">
+    <footer class="sticky bottom-0 bg-white/80 backdrop-blur-md p-4 w-full border-t border-gray-300/50 z-20">
         <div class="max-w-3xl mx-auto flex flex-col items-center space-y-3">
-            <div id="status-message" class="text-gray-400 text-sm h-5 transition-opacity">Tap mic to speak</div>
+            <div id="status-message" class="text-gray-600 text-sm h-5 transition-opacity">Tap mic to speak</div>
             <button id="mic-button" class="bg-blue-600 hover:bg-blue-700 text-white p-5 rounded-full shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500/50 ripple-button"
                     aria-label="Activate voice control">
                 <i id="mic-icon" data-lucide="mic" class="w-7 h-7"></i>
                 <i id="mic-active-icon" data-lucide="radio" class="w-7 h-7 hidden"></i>
             </button>
-            <p id="transcript-display" class="text-center text-gray-300 min-h-[1.5em] text-lg px-4"></p>
+            <p id="transcript-display" class="text-center text-gray-700 min-h-[1.5em] text-lg px-4"></p>
         </div>
     </footer>
 
     <audio id="audio-player" preload="metadata"></audio>
-    <audio id="audio-click" preload="auto" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tQwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZGVoAAAAgAAAAREBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB8DzPQ//tQwRAAlwAACpAAAAP/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAAAAAADyAABQIR0ADSIAY2BsoBBNpgAAAYEUQCgKAABsxUQCgAB/gRqAR2AAAYEQCgGgAF/hpkAR0BCAYEQAgGgAF/hpkAR0BCQYEQAgGgAF/hpkAR0BCT//tQwRMAHAAACPAED/8EHAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVIndiamEAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAD/tQwQcAJwAACNABA//EGGAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAAADyAAAAAAAAAAEAAAJiZmFtaWx5AAAAAAAAAABMYXZjNTguNzYuMTAwAAAAAAAAAAAAAAAAAAAAAAD/mZzAzAAAADv/7UMIJwP/9P/9AAGjABwA3bW1BAAggAATYwEQFADEQAAdjd1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1c="></audio>
-    <audio id="audio-toggle" preload="auto" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tQwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZGVoAAAAgAAAAREBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB8DzPQ//tQwRMAHgAACpAAAAP/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAAAAAADyAABQIR0ADSIAY2BsoBBNpgAAAYEUQCgKAABsxUQCgAB/gRqAR2AAAYEQCgGgAF/hpkAR0BCAYEQAgGgAF/hpkAR0BCQYEQAgGgAF/hpkAR0BCT//tQwROAHAAACPAED/8EHAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVIndiamEAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAD/Type/7UMFPAAABuAACNABA//EGGAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV"></audio>
+    <audio id="audio-click" preload="auto" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tQwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZGVoAAAAgAAAAREBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB8DzPQ//tQwRAAlwAACpAAAAP/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAAAAAADyAABQIR0ADSIAY2BsoBBNpgAAAYEUQCgKAABsxUQCgAB/gRqAR2AAAYEQCgGgAF/hpkAR0BCAYEQAgGgAF/hpkAR0BCQYEQAgGgAF/hpkAR0BCT//tQwRMAHAAACPAED/8EHAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVIndiamEAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAD/tQwQcAJwAACNABA//EGGAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTAAAAAAAADyAAAAAAAAAAEAAAJiZmFtaWx5AAAAAAAAAABMYXZjNTguNzYuMTAwAAAAAAAAAAAAAAAAAAAAAAD/mZzAzAAAADv/7UMIJwP/9P/9AAGjABwA3bW1BAAggAATYwEQFADEQAAdjd1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1D1d1d1d1d1c="></audio>
+    <audio id="audio-toggle" preload="auto" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tQwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZGVoAAAAgAAAAREBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB8DzPQ//tQwRMAHgAACpAAAAP/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAAAAAADyAABQIR0ADSIAY2BsoBBNpgAAAYEUQCgKAABsxUQCgAB/gRqAR2AAAYEQCgGgAF/hpkAR0BCAYEQAgGgAF/hpkAR0BCQYEQAgGgAF/hpkAR0BCT//tQwROAHAAACPAED/8EHAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVIndiamEAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAAAAPAAAACAAADSAAD/Type/7UMFPAAABuAACNABA//EGGAAAECQcABwgYBgYFAAABsxQRCgAANVUAQgECAQUCgYEOAYeBPIBA3kDmQGhAQMBBgWBgoEBgYKYobVAQgEBAQABAwEBAYGChQGBgEBAAEDAAAECgQGAgABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV"></audio>
     
 
   <script>
@@ -1022,15 +1044,17 @@
                     UI.ampmDisplay.textContent = ampm;
                 }
                 
-                let newTheme = 'theme-day';
+                // --- BODY THEME LOGIC (LIGHT THEME) ---
+                // The default is now light. We only apply overrides.
+                let newTheme = null; // Default (light)
                 if (hours >= 5 && hours < 12) newTheme = 'theme-morning';
-                else if (hours >= 12 && hours < 18) newTheme = 'theme-day';
+                else if (hours >= 12 && hours < 18) newTheme = null; // Use default light
                 else if (hours >= 18 && hours < 22) newTheme = 'theme-evening';
-                else newTheme = 'theme-night';
+                else newTheme = 'theme-night'; // Use "night light"
 
                 if (newTheme !== SmartHub.state.currentTheme && UI.body) {
                     if (SmartHub.state.currentTheme) UI.body.classList.remove(SmartHub.state.currentTheme);
-                    UI.body.classList.add(newTheme);
+                    if (newTheme) UI.body.classList.add(newTheme);
                     SmartHub.state.currentTheme = newTheme;
                 }
             },
@@ -1065,7 +1089,8 @@
             updateSliderBackground: function(slider, color = '#3b82f6') {
                 if (!slider) return;
                 const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
-                slider.style.background = `linear-gradient(to right, ${color} ${value}%, #374151 ${value}%)`;
+                // JAVASCRIPT UPDATED: Changed #374151 to #d1d5db (gray-300)
+                slider.style.background = `linear-gradient(to right, ${color} ${value}%, #d1d5db ${value}%)`;
             },
 
             // --- NEW: Generalized updateLightUI function ---
@@ -1111,7 +1136,6 @@
                 SmartHub.Persistence.saveState();
             },
 
-            // --- (updateFanUI, updateThermostatUI, etc. are the same as before) ---
             updateFanUI: function() {
                 const { speed } = SmartHub.state.fan;
                 const isOn = speed > 0;
@@ -1137,6 +1161,8 @@
                 UI.card.setAttribute('aria-pressed', isOn ? 'true' : 'false');
                 SmartHub.Persistence.saveState();
             },
+
+            // **** JAVASCRIPT FIX APPLIED HERE ****
             updateThermostatUI: function() {
                 const { temperature, mode } = SmartHub.state.thermostat;
                 const UI = SmartHub.UI.thermostat;
@@ -1145,32 +1171,56 @@
                 UI.modeDisplay.textContent = `Mode: ${mode}`;
                 UI.icon.classList.remove('text-red-500', 'text-blue-500', 'text-gray-500');
                 UI.card.classList.remove('card-active-red', 'card-active-blue');
+                
+                // Reset all buttons to INACTIVE state
                 UI.modeButtons.forEach(btn => {
-                    btn.classList.remove('bg-gray-600', 'text-white');
+                    // Remove all potential active BG/Border colors
+                    btn.classList.remove('bg-gray-600', 'bg-red-500', 'bg-blue-500', 'bg-white', 'border-gray-700');
                     const icon = btn.querySelector('i');
-                    if (icon) { icon.classList.add('text-gray-500'); icon.classList.remove('text-red-500', 'text-blue-500', 'text-white'); }
+                    if (icon) { 
+                        // Set icon to default INACTIVE color (gray-600)
+                        icon.classList.add('text-gray-600'); 
+                        // Remove all potential ACTIVE icon colors
+                        icon.classList.remove('text-red-500', 'text-blue-500', 'text-white', 'text-gray-900', 'text-gray-500'); 
+                    }
                 });
+                
                 let activeBtn;
                 if (mode === 'Heat') { 
                     UI.icon.classList.add('text-red-500'); 
                     UI.card.classList.add('card-active-red'); 
                     activeBtn = document.getElementById('temp-mode-heat'); 
-                    if (activeBtn) activeBtn.querySelector('i').classList.add('text-red-500'); 
+                    if (activeBtn) {
+                        activeBtn.classList.add('bg-red-500'); // Active BG
+                        activeBtn.querySelector('i').classList.add('text-white'); // Active Icon
+                        activeBtn.querySelector('i').classList.remove('text-gray-600'); // Remove inactive
+                    }
                 }
                 else if (mode === 'Cool') { 
                     UI.icon.classList.add('text-blue-500'); 
                     UI.card.classList.add('card-active-blue'); 
                     activeBtn = document.getElementById('temp-mode-cool'); 
-                    if (activeBtn) activeBtn.querySelector('i').classList.add('text-blue-500'); 
+                    if (activeBtn) {
+                        activeBtn.classList.add('bg-blue-500'); // Active BG
+                        activeBtn.querySelector('i').classList.add('text-white'); // Active Icon
+                        activeBtn.querySelector('i').classList.remove('text-gray-600'); // Remove inactive
+                    }
                 }
-                else { 
+                else { // mode === 'Off'
                     UI.icon.classList.add('text-gray-500');
                     activeBtn = document.getElementById('temp-mode-off'); 
-                    if (activeBtn) activeBtn.querySelector('i').classList.add('text-white'); 
+                    if (activeBtn) {
+                        // **** THIS IS THE FIX ****
+                        // Make background white, add a border, and make icon dark
+                        activeBtn.classList.add('bg-white'); // Active BG (as requested)
+                        activeBtn.classList.add('border-gray-700'); // Added border for visibility
+                        activeBtn.querySelector('i').classList.add('text-gray-900'); // Active Icon (dark)
+                        activeBtn.querySelector('i').classList.remove('text-gray-600'); // Remove inactive
+                    }
                 }
-                if (activeBtn) activeBtn.classList.add('bg-gray-600');
                 SmartHub.Persistence.saveState();
             },
+            
             updateLockUI: function() {
                 const { isLocked } = SmartHub.state.lock;
                 const UI = SmartHub.UI.lock;
@@ -1179,7 +1229,8 @@
                     UI.iconLocked.classList.remove('hidden');
                     UI.iconUnlocked.classList.add('hidden');
                     UI.button.textContent = 'Unlock';
-                    UI.button.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                    // LIGHT THEME UPDATED: Use gray-200 and gray-300
+                    UI.button.classList.add('bg-gray-200', 'hover:bg-gray-300');
                     UI.button.classList.remove('bg-green-600', 'hover:bg-green-500');
                     UI.card.classList.add('card-active-red');
                     UI.card.classList.remove('card-active-green');
@@ -1187,7 +1238,8 @@
                     UI.iconLocked.classList.add('hidden');
                     UI.iconUnlocked.classList.remove('hidden');
                     UI.button.textContent = 'Lock';
-                    UI.button.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+                    // LIGHT THEME UPDATED: Remove light gray classes
+                    UI.button.classList.remove('bg-gray-200', 'hover:bg-gray-300');
                     UI.button.classList.add('bg-green-600', 'hover:bg-green-500');
                     UI.card.classList.remove('card-active-red');
                     UI.card.classList.add('card-active-green');
