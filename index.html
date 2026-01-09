@@ -270,38 +270,6 @@
             border-left-color: #f59e0b;
         }
 
-        /* --- Dashboard Styles --- */
-        .dashboard-card {
-            background-color: var(--glass-bg);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--glass-border);
-            border-radius: 0.75rem;
-            box-shadow: var(--card-shadow);
-            padding: 1.5rem;
-            height: 100%;
-        }
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin: 0.5rem 0;
-        }
-        .stat-label {
-            color: #9ca3af;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .stat-change {
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
-        }
-        .stat-change.positive {
-            color: #10b981;
-        }
-        .stat-change.negative {
-            color: #ef4444;
-        }
-
         /* --- Schedule Modal --- */
         .schedule-item {
             background-color: rgba(31, 41, 55, 0.5);
@@ -463,7 +431,6 @@
         <!-- Navigation Tabs -->
         <section class="max-w-7xl mx-auto mb-6">
             <div class="flex flex-wrap gap-3 border-b border-gray-700 pb-3">
-                <button class="room-tab-button ripple-button active" data-tab="dashboard">Dashboard</button>
                 <button class="room-tab-button ripple-button" data-tab="devices">Devices</button>
                 <button class="room-tab-button ripple-button" data-tab="scenes">Scenes</button>
                 <button class="room-tab-button ripple-button" data-tab="automation">Automation</button>
@@ -472,71 +439,8 @@
             </div>
         </section>
 
-        <!-- Dashboard Tab -->
-        <section id="dashboard-tab" class="max-w-7xl mx-auto tab-content">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="dashboard-card">
-                    <div class="stat-label">Energy Today</div>
-                    <div class="stat-value">24.5 kWh</div>
-                    <div class="stat-change negative">↑ 12% from yesterday</div>
-                </div>
-                <div class="dashboard-card">
-                    <div class="stat-label">Active Devices</div>
-                    <div class="stat-value">7/12</div>
-                    <div class="stat-change positive">↓ 2 from last hour</div>
-                </div>
-                <div class="dashboard-card">
-                    <div class="stat-label">Indoor Temp</div>
-                    <div class="stat-value">72°F</div>
-                    <div class="stat-change">Optimal range</div>
-                </div>
-                <div class="dashboard-card">
-                    <div class="stat-label">Security Status</div>
-                    <div class="stat-value">Armed</div>
-                    <div class="stat-change positive">All secure</div>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="dashboard-card">
-                    <h3 class="text-xl font-semibold mb-4">Energy Usage</h3>
-                    <canvas id="energy-chart" width="400" height="200"></canvas>
-                </div>
-                <div class="dashboard-card">
-                    <h3 class="text-xl font-semibold mb-4">Recent Activity</h3>
-                    <div class="security-log">
-                        <div class="log-entry">
-                            <div class="log-time">10:45 AM</div>
-                            <div class="log-message">Front door unlocked</div>
-                            <div class="log-type info">Info</div>
-                        </div>
-                        <div class="log-entry">
-                            <div class="log-time">09:30 AM</div>
-                            <div class="log-message">Motion detected in backyard</div>
-                            <div class="log-type warning">Warning</div>
-                        </div>
-                        <div class="log-entry">
-                            <div class="log-time">08:15 AM</div>
-                            <div class="log-message">"Good Morning" scene activated</div>
-                            <div class="log-type info">Info</div>
-                        </div>
-                        <div class="log-entry">
-                            <div class="log-time">07:00 AM</div>
-                            <div class="log-message">Security system armed</div>
-                            <div class="log-type info">Info</div>
-                        </div>
-                        <div class="log-entry">
-                            <div class="log-time">11:30 PM</div>
-                            <div class="log-message">"Good Night" scene activated</div>
-                            <div class="log-type info">Info</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Devices Tab -->
-        <section id="devices-tab" class="max-w-7xl mx-auto mb-6 tab-content hidden">
+        <section id="devices-tab" class="max-w-7xl mx-auto mb-6 tab-content">
             <h2 class="text-2xl font-semibold mb-4">Devices</h2>
             <div id="room-tab-container" class="flex flex-wrap gap-3 mb-6">
                 <button class="room-tab-button ripple-button active" data-room="all">All</button>
@@ -547,40 +451,6 @@
                 <button class="room-tab-button ripple-button" data-room="outdoor">Outdoor</button>
             </div>
             <div id="device-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Living Room Light -->
-                <div id="living-light-card" class="device-card cursor-pointer" 
-                     style="--light-hue: 200;"
-                     role="button" tabindex="0" aria-pressed="false" aria-label="Living Room Light toggle"
-                     data-device="light" data-room="living-room">
-                   
-                    <div class="flex justify-between items-center pointer-events-none">
-                        <div class="flex items-center space-x-3">
-                            <i id="living-light-icon" data-lucide="lightbulb" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
-                            <h2 class="text-2xl font-semibold">Living Room Light</h2>
-                        </div>
-                        <span id="living-light-status-text" class="text-lg font-medium text-gray-400 card-status-text">Off</span>
-                    </div>
-
-                    <div class="collapsible-controls">
-                        <div class="space-y-3">
-                            <div class="space-y-3 transition-opacity duration-300">
-                                <label for="living-light-intensity" class="block text-sm font-medium text-gray-400">Intensity</label>
-                                <div class="slider-container relative">
-                                    <input type="range" id="living-light-intensity" min="0" max="100" value="50" class="w-full" aria-label="Light intensity">
-                                    <div id="living-light-intensity-tooltip" class="slider-tooltip">50%</div>
-                                </div>
-                            </div>
-                            <div class="space-y-3 mt-4 transition-opacity duration-300">
-                                <label for="living-light-color" class="block text-sm font-medium text-gray-400">Color</label>
-                                <div class="slider-container relative">
-                                    <input type="range" id="living-light-color" min="0" max="360" value="200" class="w-full color-slider" aria-label="Light color">
-                                    <div id="living-light-color-tooltip" class="slider-tooltip" style="background-color: hsl(200, 100%, 50%)">Hue: 200°</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Bedroom Light -->
                 <div id="bed-light-card" class="device-card cursor-pointer" 
                      style="--light-hue: 30;"
@@ -609,40 +479,6 @@
                                 <div class="slider-container relative">
                                     <input type="range" id="bed-light-color" min="0" max="360" value="30" class="w-full color-slider" aria-label="Light color">
                                     <div id="bed-light-color-tooltip" class="slider-tooltip" style="background-color: hsl(30, 100%, 50%)">Hue: 30°</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Kitchen Light -->
-                <div id="kitchen-light-card" class="device-card cursor-pointer" 
-                     style="--light-hue: 60;"
-                     role="button" tabindex="0" aria-pressed="false" aria-label="Kitchen Light toggle"
-                     data-device="light" data-room="kitchen">
-                   
-                    <div class="flex justify-between items-center pointer-events-none">
-                        <div class="flex items-center space-x-3">
-                            <i id="kitchen-light-icon" data-lucide="lightbulb" class="w-7 h-7 text-gray-500 transition-all duration-300"></i>
-                            <h2 class="text-2xl font-semibold">Kitchen Light</h2>
-                        </div>
-                        <span id="kitchen-light-status-text" class="text-lg font-medium text-gray-400 card-status-text">Off</span>
-                    </div>
-
-                    <div class="collapsible-controls">
-                        <div class="space-y-3">
-                            <div class="space-y-3 transition-opacity duration-300">
-                                <label for="kitchen-light-intensity" class="block text-sm font-medium text-gray-400">Intensity</label>
-                                <div class="slider-container relative">
-                                    <input type="range" id="kitchen-light-intensity" min="0" max="100" value="75" class="w-full" aria-label="Light intensity">
-                                    <div id="kitchen-light-intensity-tooltip" class="slider-tooltip">75%</div>
-                                </div>
-                            </div>
-                            <div class="space-y-3 mt-4 transition-opacity duration-300">
-                                <label for="kitchen-light-color" class="block text-sm font-medium text-gray-400">Color</label>
-                                <div class="slider-container relative">
-                                    <input type="range" id="kitchen-light-color" min="0" max="360" value="60" class="w-full color-slider" aria-label="Light color">
-                                    <div id="kitchen-light-color-tooltip" class="slider-tooltip" style="background-color: hsl(60, 100%, 50%)">Hue: 60°</div>
                                 </div>
                             </div>
                         </div>
@@ -892,7 +728,7 @@
                     <div class="schedule-item">
                         <div>
                             <div class="schedule-time">6:00 PM</div>
-                            <div class="schedule-action">Turn on Living Room Lights</div>
+                            <div class="schedule-action">Turn on Bedroom Lights</div>
                         </div>
                         <label class="schedule-toggle">
                             <input type="checkbox">
@@ -1237,7 +1073,6 @@
             <div>
                 <label class="block text-sm font-medium text-gray-400 mb-2">Device/Scene</label>
                 <select class="w-full p-2 bg-gray-800 rounded-lg">
-                    <option>Living Room Light</option>
                     <option>Bedroom Light</option>
                     <option>Front Door Lock</option>
                     <option>Good Morning Scene</option>
@@ -1249,7 +1084,7 @@
     </div>
 
     <audio id="audio-player" preload="metadata"></audio>
-    <audio id="audio-click" preload="auto" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1c="></audio>
+    <audio id="audio-click" preload="auto" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1c="></audio>
     <audio id="audio-toggle" preload="auto" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA"></audio>
 
     <script>
@@ -1264,9 +1099,7 @@
         // --- 1. Application State ---
         state: {
             // Device states
-            livingLight: { intensity: 50, lastKnownIntensity: 50, hue: 200 },
             bedLight: { intensity: 50, lastKnownIntensity: 50, hue: 30 },
-            kitchenLight: { intensity: 75, lastKnownIntensity: 75, hue: 60 },
             fan: { speed: 2, lastKnownSpeed: 2 },
             thermostat: { temperature: 68, mode: 'Off' },
             lock: { isLocked: true },
@@ -1277,7 +1110,7 @@
             // UI states
             activeScene: null,
             currentRoom: 'all',
-            currentTab: 'dashboard',
+            currentTab: 'devices',
             statusTimer: null,
             listening: false,
             currentMockWeatherIndex: 1,
@@ -1298,13 +1131,6 @@
                     securityAlerts: true,
                     guestAccess: false
                 }
-            },
-            
-            // Energy tracking
-            energyUsage: {
-                today: 24.5,
-                yesterday: 21.8,
-                weekly: [22, 24, 21, 25, 23, 24, 24.5]
             }
         },
 
@@ -1328,9 +1154,7 @@
                 'goodMorning': {
                     message: "Activated 'Good Morning' scene.",
                     updates: {
-                        livingLight: { intensity: 70, lastKnownIntensity: 70, hue: 50 },
                         bedLight: { intensity: 60, lastKnownIntensity: 60, hue: 40 },
-                        kitchenLight: { intensity: 80, lastKnownIntensity: 80, hue: 60 },
                         fan: { speed: 0 },
                         thermostat: { temperature: 68, mode: 'Heat' },
                         lock: { isLocked: false },
@@ -1340,9 +1164,7 @@
                 'movieNight': {
                     message: "Activated 'Movie Night' scene.",
                     updates: {
-                        livingLight: { intensity: 20, lastKnownIntensity: 20, hue: 240 },
                         bedLight: { intensity: 0 },
-                        kitchenLight: { intensity: 0 },
                         fan: { speed: 1, lastKnownSpeed: 1 },
                         lock: { isLocked: true },
                         blinds: { position: 0 }
@@ -1352,9 +1174,7 @@
                 'goodNight': {
                     message: "Activated 'Good Night' scene.",
                     updates: {
-                        livingLight: { intensity: 0 },
                         bedLight: { intensity: 0 },
-                        kitchenLight: { intensity: 0 },
                         fan: { speed: 0 },
                         thermostat: { temperature: 65, mode: 'Heat' },
                         lock: { isLocked: true },
@@ -1365,9 +1185,7 @@
                 'allOff': {
                     message: "Turned all devices off.",
                     updates: {
-                        livingLight: { intensity: 0 },
                         bedLight: { intensity: 0 },
-                        kitchenLight: { intensity: 0 },
                         fan: { speed: 0 },
                         thermostat: { mode: 'Off' },
                         blinds: { position: 0 }
@@ -1377,9 +1195,7 @@
                 'partyTime': {
                     message: "Let's get this party started!",
                     updates: {
-                        livingLight: { intensity: 100, lastKnownIntensity: 100, hue: 300 },
                         bedLight: { intensity: 80, lastKnownIntensity: 80, hue: 200 },
-                        kitchenLight: { intensity: 90, lastKnownIntensity: 90, hue: 180 },
                         fan: { speed: 1, lastKnownSpeed: 1 },
                         thermostat: { temperature: 70, mode: 'Cool' },
                         lock: { isLocked: true },
@@ -1390,9 +1206,7 @@
                 'focusMode': {
                     message: "Activating 'Focus Mode'.",
                     updates: {
-                        livingLight: { intensity: 60, lastKnownIntensity: 60, hue: 220 },
                         bedLight: { intensity: 0 },
-                        kitchenLight: { intensity: 0 },
                         fan: { speed: 1, lastKnownSpeed: 1 },
                         thermostat: { temperature: 68, mode: 'Heat' },
                         lock: { isLocked: true },
@@ -1403,9 +1217,7 @@
                 'vacation': {
                     message: "Activating 'Vacation' mode.",
                     updates: {
-                        livingLight: { intensity: 0 },
                         bedLight: { intensity: 0 },
-                        kitchenLight: { intensity: 0 },
                         fan: { speed: 0 },
                         thermostat: { temperature: 62, mode: 'Cool' },
                         lock: { isLocked: true },
@@ -1416,9 +1228,7 @@
                 'dinner': {
                     message: "Setting up for dinner.",
                     updates: {
-                        livingLight: { intensity: 70, lastKnownIntensity: 70, hue: 60 },
                         bedLight: { intensity: 0 },
-                        kitchenLight: { intensity: 90, lastKnownIntensity: 90, hue: 60 },
                         fan: { speed: 1, lastKnownSpeed: 1 },
                         lock: { isLocked: false },
                         blinds: { position: 30 }
@@ -1427,9 +1237,7 @@
                 'dateNight': {
                     message: "Creating romantic atmosphere.",
                     updates: {
-                        livingLight: { intensity: 40, lastKnownIntensity: 40, hue: 330 },
                         bedLight: { intensity: 0 },
-                        kitchenLight: { intensity: 0 },
                         fan: { speed: 0 },
                         lock: { isLocked: true },
                         blinds: { position: 20 }
@@ -1439,9 +1247,7 @@
                 'exercise': {
                     message: "Starting exercise mode.",
                     updates: {
-                        livingLight: { intensity: 100, lastKnownIntensity: 100, hue: 120 },
                         bedLight: { intensity: 0 },
-                        kitchenLight: { intensity: 0 },
                         fan: { speed: 3, lastKnownSpeed: 3 },
                         thermostat: { temperature: 65, mode: 'Cool' },
                         blinds: { position: 80 }
@@ -1451,9 +1257,7 @@
                 'reading': {
                     message: "Setting up reading environment.",
                     updates: {
-                        livingLight: { intensity: 80, lastKnownIntensity: 80, hue: 50 },
                         bedLight: { intensity: 70, lastKnownIntensity: 70, hue: 50 },
-                        kitchenLight: { intensity: 0 },
                         fan: { speed: 0 },
                         blinds: { position: 60 }
                     }
@@ -1461,9 +1265,7 @@
                 'gaming': {
                     message: "Activating gaming mode.",
                     updates: {
-                        livingLight: { intensity: 30, lastKnownIntensity: 30, hue: 240 },
                         bedLight: { intensity: 0 },
-                        kitchenLight: { intensity: 0 },
                         fan: { speed: 2, lastKnownSpeed: 2 },
                         thermostat: { temperature: 68, mode: 'Cool' },
                         blinds: { position: 10 }
@@ -1488,18 +1290,6 @@
                 
                 // Light commands
                 { 
-                    regex: /(living room light|living light) (on|off)/i,
-                    handler: (matches) => {
-                        const state = SmartHub.state.livingLight;
-                        if (matches[2] === 'on') {
-                            state.intensity = state.lastKnownIntensity;
-                        } else {
-                            state.intensity = 0;
-                        }
-                        SmartHub.Speech.showStatus(`OK, turning ${matches[2]} the living room light.`);
-                    }
-                },
-                { 
                     regex: /(bedroom light|bed light) (on|off)/i,
                     handler: (matches) => {
                         const state = SmartHub.state.bedLight;
@@ -1512,46 +1302,22 @@
                     }
                 },
                 { 
-                    regex: /(kitchen light) (on|off)/i,
-                    handler: (matches) => {
-                        const state = SmartHub.state.kitchenLight;
-                        if (matches[2] === 'on') {
-                            state.intensity = state.lastKnownIntensity;
-                        } else {
-                            state.intensity = 0;
-                        }
-                        SmartHub.Speech.showStatus(`OK, turning ${matches[2]} the kitchen light.`);
-                    }
-                },
-                { 
                     regex: /(turn on all lights|lights on)/i,
                     handler: () => {
-                        SmartHub.state.livingLight.intensity = SmartHub.state.livingLight.lastKnownIntensity;
                         SmartHub.state.bedLight.intensity = SmartHub.state.bedLight.lastKnownIntensity;
-                        SmartHub.state.kitchenLight.intensity = SmartHub.state.kitchenLight.lastKnownIntensity;
                         SmartHub.Speech.showStatus(`OK, turning on all lights.`);
                     }
                 },
                 { 
                     regex: /(turn off all lights|lights off)/i,
                     handler: () => {
-                        SmartHub.state.livingLight.intensity = 0;
                         SmartHub.state.bedLight.intensity = 0;
-                        SmartHub.state.kitchenLight.intensity = 0;
                         SmartHub.Speech.showStatus(`OK, turning off all lights.`);
                     }
                 },
                 { 
-                    regex: /(set living room light to|set living light to)/i,
-                    handler: (matches, command) => SmartHub.EventHandlers.handleLightCommand(command, 'livingLight')
-                },
-                { 
                     regex: /(set bedroom light to|set bed light to)/i,
                     handler: (matches, command) => SmartHub.EventHandlers.handleLightCommand(command, 'bedLight')
-                },
-                { 
-                    regex: /(set kitchen light to)/i,
-                    handler: (matches, command) => SmartHub.EventHandlers.handleLightCommand(command, 'kitchenLight')
                 },
                 // Fan commands
                 { 
@@ -1648,7 +1414,6 @@
                     }
                 },
                 // Tab navigation
-                { regex: /show dashboard/i, handler: () => { SmartHub.UIUpdater.switchTab('dashboard'); SmartHub.Speech.showStatus("Showing dashboard."); } },
                 { regex: /show devices/i, handler: () => { SmartHub.UIUpdater.switchTab('devices'); SmartHub.Speech.showStatus("Showing devices."); } },
                 { regex: /show scenes/i, handler: () => { SmartHub.UIUpdater.switchTab('scenes'); SmartHub.Speech.showStatus("Showing scenes."); } },
                 { regex: /show automation/i, handler: () => { SmartHub.UIUpdater.switchTab('automation'); SmartHub.Speech.showStatus("Showing automation."); } },
@@ -1692,15 +1457,6 @@
                 desc: document.getElementById('weather-desc')
               },
               // Light devices
-              livingLight: {
-                card: document.getElementById('living-light-card'),
-                intensity: document.getElementById('living-light-intensity'),
-                statusText: document.getElementById('living-light-status-text'),
-                icon: document.getElementById('living-light-icon'),
-                colorSlider: document.getElementById('living-light-color'),
-                intensityTooltip: document.getElementById('living-light-intensity-tooltip'),
-                colorTooltip: document.getElementById('living-light-color-tooltip')
-              },
               bedLight: {
                 card: document.getElementById('bed-light-card'),
                 intensity: document.getElementById('bed-light-intensity'),
@@ -1709,15 +1465,6 @@
                 colorSlider: document.getElementById('bed-light-color'),
                 intensityTooltip: document.getElementById('bed-light-intensity-tooltip'),
                 colorTooltip: document.getElementById('bed-light-color-tooltip')
-              },
-              kitchenLight: {
-                card: document.getElementById('kitchen-light-card'),
-                intensity: document.getElementById('kitchen-light-intensity'),
-                statusText: document.getElementById('kitchen-light-status-text'),
-                icon: document.getElementById('kitchen-light-icon'),
-                colorSlider: document.getElementById('kitchen-light-color'),
-                intensityTooltip: document.getElementById('kitchen-light-intensity-tooltip'),
-                colorTooltip: document.getElementById('kitchen-light-color-tooltip')
               },
               // Other devices
               fan: {
@@ -1816,7 +1563,6 @@
               },
               // Tab navigation
               tabs: {
-                dashboard: document.getElementById('dashboard-tab'),
                 devices: document.getElementById('devices-tab'),
                 scenes: document.getElementById('scenes-tab'),
                 automation: document.getElementById('automation-tab'),
@@ -1831,10 +1577,6 @@
                 deviceGrid: document.getElementById('device-grid'),
                 allDevices: document.querySelectorAll('#device-grid .device-card')
               },
-              // Dashboard
-              dashboard: {
-                energyChart: document.getElementById('energy-chart')
-              },
               // Notifications
               notificationContainer: document.getElementById('notification-container'),
               // Audio
@@ -1847,7 +1589,6 @@
             SmartHub.Speech.init();
             SmartHub.EventHandlers.registerAll();
             SmartHub.Notifications.init();
-            SmartHub.Dashboard.init();
 
             // --- Run Initial Updates ---
             SmartHub.UIUpdater.updateAllUIs();
@@ -1859,7 +1600,6 @@
             // --- Start Timers ---
             setInterval(() => SmartHub.HeaderDisplay.updateClock(), 1000); 
             setInterval(() => SmartHub.HeaderDisplay.updateWeather(), 300000); 
-            setInterval(() => SmartHub.Dashboard.updateEnergyUsage(), 60000); // Update energy usage every minute
         },
         
         // --- 5. Persistence Module ---
@@ -2067,16 +1807,8 @@
                 UI.card.setAttribute('aria-pressed', isOn ? 'true' : 'false');
             },
             
-            updateLivingLightUI: function() {
-                SmartHub.UIUpdater._updateLightUI(SmartHub.state.livingLight, SmartHub.UI.livingLight);
-                SmartHub.Persistence.saveState();
-            },
             updateBedLightUI: function() {
                 SmartHub.UIUpdater._updateLightUI(SmartHub.state.bedLight, SmartHub.UI.bedLight);
-                SmartHub.Persistence.saveState();
-            },
-            updateKitchenLightUI: function() {
-                SmartHub.UIUpdater._updateLightUI(SmartHub.state.kitchenLight, SmartHub.UI.kitchenLight);
                 SmartHub.Persistence.saveState();
             },
 
@@ -2312,9 +2044,7 @@
                 SmartHub.Persistence.saveState();
             },
             updateAllUIs: function() {
-                this.updateLivingLightUI();
                 this.updateBedLightUI();
-                this.updateKitchenLightUI();
                 this.updateFanUI();
                 this.updateThermostatUI();
                 this.updateLockUI();
@@ -2340,23 +2070,6 @@
                     });
                 });
 
-                // Living Room Light
-                if (UI.livingLight.card) {
-                    UI.livingLight.card.addEventListener('click', (e) => Handlers.lightCardClickHandler(e, 'livingLight'));
-                    UI.livingLight.card.addEventListener('keydown', (e) => Handlers.handleCardKeyPress(e, (e) => Handlers.lightCardClickHandler(e, 'livingLight')));
-                    UI.livingLight.intensity.addEventListener('input', (e) => {
-                        const newValue = Number(e.target.value);
-                        SmartHub.state.livingLight.intensity = newValue;
-                        if (newValue > 0) { SmartHub.state.livingLight.lastKnownIntensity = newValue; }
-                        SmartHub.UIUpdater.updateLivingLightUI();
-                    });
-                    UI.livingLight.colorSlider.addEventListener('input', (e) => { 
-                        SmartHub.state.livingLight.hue = e.target.value; 
-                        if (SmartHub.state.livingLight.intensity === 0) { SmartHub.state.livingLight.intensity = SmartHub.state.livingLight.lastKnownIntensity; }
-                        SmartHub.UIUpdater.updateLivingLightUI(); 
-                    });
-                }
-                
                 // Bedroom Light
                 if (UI.bedLight.card) {
                     UI.bedLight.card.addEventListener('click', (e) => Handlers.lightCardClickHandler(e, 'bedLight'));
@@ -2371,23 +2084,6 @@
                         SmartHub.state.bedLight.hue = e.target.value; 
                         if (SmartHub.state.bedLight.intensity === 0) { SmartHub.state.bedLight.intensity = SmartHub.state.bedLight.lastKnownIntensity; }
                         SmartHub.UIUpdater.updateBedLightUI(); 
-                    });
-                }
-
-                // Kitchen Light
-                if (UI.kitchenLight.card) {
-                    UI.kitchenLight.card.addEventListener('click', (e) => Handlers.lightCardClickHandler(e, 'kitchenLight'));
-                    UI.kitchenLight.card.addEventListener('keydown', (e) => Handlers.handleCardKeyPress(e, (e) => Handlers.lightCardClickHandler(e, 'kitchenLight')));
-                    UI.kitchenLight.intensity.addEventListener('input', (e) => {
-                        const newValue = Number(e.target.value);
-                        SmartHub.state.kitchenLight.intensity = newValue;
-                        if (newValue > 0) { SmartHub.state.kitchenLight.lastKnownIntensity = newValue; }
-                        SmartHub.UIUpdater.updateKitchenLightUI();
-                    });
-                    UI.kitchenLight.colorSlider.addEventListener('input', (e) => { 
-                        SmartHub.state.kitchenLight.hue = e.target.value; 
-                        if (SmartHub.state.kitchenLight.intensity === 0) { SmartHub.state.kitchenLight.intensity = SmartHub.state.kitchenLight.lastKnownIntensity; }
-                        SmartHub.UIUpdater.updateKitchenLightUI(); 
                     });
                 }
 
@@ -2526,16 +2222,14 @@
                 if (e.target.closest('.collapsible-controls')) return;
                 
                 const state = SmartHub.state[lightKey];
-                const updater = lightKey === 'livingLight' ? SmartHub.UIUpdater.updateLivingLightUI : 
-                               lightKey === 'bedLight' ? SmartHub.UIUpdater.updateBedLightUI : 
-                               SmartHub.UIUpdater.updateKitchenLightUI;
+                const updater = lightKey === 'bedLight' ? SmartHub.UIUpdater.updateBedLightUI : null;
 
                 if (state.intensity > 0) {
                     state.intensity = 0;
                 } else {
                     state.intensity = state.lastKnownIntensity;
                 }
-                updater();
+                if (updater) updater();
             },
             
             handleLightCommand: function(command, lightKey) {
@@ -2545,8 +2239,7 @@
                 
                 const colorWord = Object.keys(colorMap).find(c => command.includes(c));
                 const intensity = parser(command);
-                const lightName = lightKey === 'livingLight' ? 'Living Room light' : 
-                                 lightKey === 'bedLight' ? 'Bedroom light' : 'Kitchen light';
+                const lightName = lightKey === 'bedLight' ? 'Bedroom light' : '';
 
                 if (colorWord) {
                     state.hue = colorMap[colorWord];
@@ -2886,85 +2579,6 @@
                         notification.parentNode.removeChild(notification);
                     }
                 }, 300);
-            }
-        },
-
-        // --- 15. Dashboard Module ---
-        Dashboard: {
-            chart: null,
-            init: function() {
-                const canvas = SmartHub.UI.dashboard.energyChart;
-                if (!canvas) return;
-                
-                const ctx = canvas.getContext('2d');
-                this.chart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                        datasets: [{
-                            label: 'Energy Usage (kWh)',
-                            data: SmartHub.state.energyUsage.weekly,
-                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                            borderColor: 'rgba(59, 130, 246, 1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                },
-                                ticks: {
-                                    color: 'rgba(255, 255, 255, 0.7)'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                },
-                                ticks: {
-                                    color: 'rgba(255, 255, 255, 0.7)'
-                                }
-                            }
-                        }
-                    }
-                });
-            },
-            updateEnergyUsage: function() {
-                // Simulate energy usage changes
-                const today = SmartHub.state.energyUsage.today;
-                const change = (Math.random() - 0.5) * 2; // Random change between -1 and 1
-                SmartHub.state.energyUsage.today = Math.max(0, today + change);
-                
-                // Update today's value in the weekly array
-                const dayIndex = new Date().getDay();
-                const adjustedIndex = dayIndex === 0 ? 6 : dayIndex - 1; // Adjust for Monday start
-                SmartHub.state.energyUsage.weekly[adjustedIndex] = SmartHub.state.energyUsage.today;
-                
-                // Update chart if it exists
-                if (this.chart) {
-                    this.chart.data.datasets[0].data = SmartHub.state.energyUsage.weekly;
-                    this.chart.update();
-                }
-                
-                // Update dashboard stat
-                const statValue = document.querySelector('.dashboard-card .stat-value');
-                if (statValue) {
-                    statValue.textContent = `${SmartHub.state.energyUsage.today.toFixed(1)} kWh`;
-                }
-                
-                SmartHub.Persistence.saveState();
             }
         }
     };
